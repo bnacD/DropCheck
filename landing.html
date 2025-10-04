@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DropCheck - Weather Intelligence Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=EB+Garamond:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0e27;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Enhanced Background - More Visible Beach */
+        .bg-image {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            background-image: url('https://images.pexels.com/photos/15104444/pexels-photo-15104444.jpeg');
+            background-size: cover;
+            background-position: center 35%;
+            background-attachment: fixed;
+            animation: slowZoom 30s ease-in-out infinite alternate;
+        }
+
+        @keyframes slowZoom {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.05); }
+        }
+
+        .bg-image::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(10, 14, 39, 0.75), rgba(10, 14, 39, 0.65));
+            backdrop-filter: blur(1px);
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1200px;
+            width: 100%;
+            padding: 20px;
+            text-align: center;
+            animation: fadeIn 1s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .logo {
+            font-size: clamp(3em, 10vw, 5em);
+            margin-bottom: 20px;
+            animation: float 4s ease-in-out infinite;
+            filter: drop-shadow(0 10px 30px rgba(135, 206, 235, 0.5));
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-25px) rotate(5deg); }
+        }
+
+        /* DROPCHECK - HUGE Title */
+        .main-title {
+            font-family: 'EB Garamond', serif;
+            font-size: clamp(4em, 15vw, 8em);
+            font-weight: 900;
+            background: linear-gradient(135deg, #fff 0%, #87CEEB 50%, #4A90E2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 20px;
+            letter-spacing: -3px;
+            line-height: 1;
+            text-shadow: 0 0 60px rgba(135, 206, 235, 0.6);
+            animation: titleGlow 3s ease-in-out infinite alternate;
+            position: relative;
+        }
+
+        @keyframes titleGlow {
+            0% { filter: drop-shadow(0 0 20px rgba(135, 206, 235, 0.4)); }
+            100% { filter: drop-shadow(0 0 40px rgba(135, 206, 235, 0.8)); }
+        }
+
+        /* Medium subtitle */
+        h1 {
+            font-family: 'EB Garamond', serif;
+            font-size: clamp(1.8em, 5vw, 3em);
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.95);
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+            line-height: 1.2;
+            animation: slideIn 1s ease-out 0.3s both;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        /* Small description */
+        .subtitle {
+            font-size: clamp(0.95em, 2.5vw, 1.15em);
+            color: rgba(255, 255, 255, 0.85);
+            margin-bottom: 50px;
+            font-weight: 300;
+            line-height: 1.6;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            animation: slideIn 1s ease-out 0.5s both;
+        }
+
+        .cards-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+            gap: 35px;
+            margin-top: 50px;
+            max-width: 100%;
+        }
+
+        .version-card {
+            background: rgba(15, 23, 42, 0.88);
+            backdrop-filter: blur(25px);
+            border: 2px solid rgba(255, 255, 255, 0.12);
+            border-radius: 28px;
+            padding: clamp(35px, 5vw, 55px) clamp(30px, 4vw, 45px);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            min-height: 480px;
+            display: flex;
+            flex-direction: column;
+            animation: cardFloat 1s ease-out both;
+        }
+
+        .version-card:nth-child(1) { animation-delay: 0.7s; }
+        .version-card:nth-child(2) { animation-delay: 0.9s; }
+
+        @keyframes cardFloat {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .version-card::before {
+            content: '';
+            position: absolute;
+            top: -100%;
+            left: -100%;
+            width: 300%;
+            height: 300%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transform: rotate(45deg);
+            transition: all 0.8s ease;
+        }
+
+        .version-card:hover::before {
+            left: 100%;
+            top: 100%;
+        }
+
+        .version-card:hover {
+            transform: translateY(-15px) scale(1.03);
+            border-color: rgba(135, 206, 235, 0.6);
+            box-shadow: 0 40px 100px rgba(135, 206, 235, 0.5);
+        }
+
+        .card-icon {
+            font-size: clamp(3.5em, 9vw, 5.5em);
+            margin-bottom: 20px;
+            display: block;
+            animation: iconBounce 2s ease-in-out infinite;
+        }
+
+        @keyframes iconBounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        .card-title {
+            font-family: 'EB Garamond', serif;
+            font-size: clamp(1.8em, 4.5vw, 2.4em);
+            font-weight: 800;
+            margin-bottom: 18px;
+            color: #fff;
+            line-height: 1.2;
+        }
+
+        .card-description {
+            font-size: clamp(1em, 2.5vw, 1.15em);
+            color: rgba(255, 255, 255, 0.85);
+            line-height: 1.7;
+            margin-bottom: 25px;
+        }
+
+        .card-features {
+            list-style: none;
+            text-align: left;
+            margin-bottom: 30px;
+            flex-grow: 1;
+        }
+
+        .card-features li {
+            padding: 10px 0;
+            color: rgba(255, 255, 255, 0.85);
+            font-size: clamp(0.9em, 2vw, 1em);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            line-height: 1.5;
+            transition: all 0.3s ease;
+        }
+
+        .card-features li:hover {
+            color: #87CEEB;
+            transform: translateX(5px);
+        }
+
+        .card-features li::before {
+            content: '✓';
+            color: #10b981;
+            font-weight: bold;
+            font-size: 1.3em;
+            flex-shrink: 0;
+        }
+
+        .card-button {
+            background: linear-gradient(135deg, #58a6ff, #a371f7);
+            color: white;
+            border: none;
+            padding: clamp(16px, 3.5vw, 20px) clamp(30px, 5vw, 45px);
+            border-radius: 14px;
+            font-size: clamp(1em, 2.5vw, 1.15em);
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 12px 35px rgba(88, 166, 255, 0.35);
+            text-decoration: none;
+            display: inline-block;
+            margin-top: auto;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-button::after {
+            content: '→';
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%) translateX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .card-button:hover::after {
+            transform: translateY(-50%) translateX(5px);
+        }
+
+        .card-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 20px 50px rgba(88, 166, 255, 0.6);
+        }
+
+        .scientific-card {
+            border-color: rgba(88, 166, 255, 0.3);
+        }
+
+        /* Sky Blue Theme for Consumer */
+        .consumer-card {
+            border-color: rgba(135, 206, 235, 0.45);
+            background: rgba(135, 206, 235, 0.1);
+        }
+
+        .consumer-card .card-button {
+            background: linear-gradient(135deg, #87CEEB, #4A90E2);
+        }
+
+        .consumer-card .card-button:hover {
+            box-shadow: 0 20px 50px rgba(135, 206, 235, 0.7);
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(255, 119, 198, 0.25);
+            border: 1px solid rgba(255, 119, 198, 0.5);
+            padding: 8px 18px;
+            border-radius: 50px;
+            font-size: clamp(0.7em, 1.8vw, 0.8em);
+            font-weight: 700;
+            color: #ff77c6;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-top: 12px;
+        }
+
+        .consumer-badge {
+            background: rgba(135, 206, 235, 0.35);
+            border-color: rgba(135, 206, 235, 0.6);
+            color: #87CEEB;
+        }
+
+        .footer {
+            margin-top: clamp(40px, 10vw, 70px);
+            color: rgba(255, 255, 255, 0.7);
+            font-size: clamp(0.8em, 2vw, 0.95em);
+            line-height: 1.7;
+            padding: 0 20px;
+            animation: fadeIn 1s ease-out 1.5s both;
+        }
+
+        /* Floating particles */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            animation: particleFloat 15s infinite ease-in-out;
+        }
+
+        @keyframes particleFloat {
+            0%, 100% { transform: translateY(0) translateX(0); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100vh) translateX(50px); opacity: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .version-card {
+                min-height: auto;
+                padding: 35px 28px;
+            }
+            .version-card:hover {
+                transform: translateY(-5px) scale(1);
+            }
+            .main-title {
+                letter-spacing: -2px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-image"></div>
+    <div class="particles" id="particles"></div>
+    
+    <div class="container">
+        <div class="logo">🌊</div>
+        <div class="main-title">DropCheck</div>
+        <h1>Weather Intelligence Platform</h1>
+        <p class="subtitle">Advanced climate analysis powered by NASA data and real-time forecasting</p>
+
+        <div class="cards-container">
+            <!-- Scientific Version -->
+            <div class="version-card scientific-card">
+                <span class="card-icon">🔬</span>
+                <h2 class="card-title">Scientific Analysis</h2>
+                <span class="badge">Advanced</span>
+                <p class="card-description">
+                    Deep historical analysis with 20+ years of real NASA data for research and planning
+                </p>
+                <ul class="card-features">
+                    <li>Real NASA POWER API data</li>
+                    <li>Custom probability thresholds</li>
+                    <li>Area comparison with polygons</li>
+                    <li>Search history & comparatives</li>
+                    <li>Enhanced AI assistant</li>
+                    <li>Export CSV + JSON with metadata</li>
+                </ul>
+                <a href="scientific.html" class="card-button">
+                    Launch Scientific Analysis
+                </a>
+            </div>
+
+            <!-- Consumer Version -->
+            <div class="version-card consumer-card">
+                <span class="card-icon">☀️</span>
+                <h2 class="card-title">Quick Forecast</h2>
+                <span class="badge consumer-badge">Simple</span>
+                <p class="card-description">
+                    Real-time weather forecast powered by Open-Meteo API for everyday planning
+                </p>
+                <ul class="card-features">
+                    <li>Real Open-Meteo API data</li>
+                    <li>24-hour detailed forecast</li>
+                    <li>7-day or 16-day outlook</li>
+                    <li>Beautiful weather cards</li>
+                    <li>Temperature & precipitation</li>
+                    <li>Mobile-friendly interface</li>
+                </ul>
+                <a href="consumer.html" class="card-button">
+                    Launch Quick Forecast
+                </a>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>NASA Space Apps Challenge 2025 | Powered by NASA POWER & Open-Meteo APIs</p>
+        </div>
+    </div>
+
+    <script>
+        // Create floating particles
+        const particlesContainer = document.getElementById('particles');
+        for (let i = 0; i < 20; i++) {
+            const particle = document.createElement('div');
+            particle.className = 'particle';
+            particle.style.left = Math.random() * 100 + '%';
+            particle.style.animationDelay = Math.random() * 15 + 's';
+            particle.style.animationDuration = (15 + Math.random() * 10) + 's';
+            particlesContainer.appendChild(particle);
+        }
+    </script>
+</body>
+</html>

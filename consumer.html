@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NASA Weather Forecast - Real-Time Data</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=EB+Garamond:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="consumer.css">
+    
+    <style>
+        h1, h2, h3, .header h1, .card-day {
+            font-family: 'EB Garamond', serif !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animation"></div>
+    <div class="stars"></div>
+    
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <a href="landing.html" class="back-link">← Back to Home</a>
+            <h1>☀️ Weather Forecast</h1>
+            <p>Real-time hourly & extended daily predictions powered by Open-Meteo</p>
+            <span class="badge">NASA Space Apps 2025</span>
+        </header>
+
+        <!-- Search Section -->
+        <div class="glass-card search-section">
+            <div class="card-header">
+                <span class="card-icon">🔍</span>
+                <h2>Search Location</h2>
+            </div>
+            
+            <div class="search-box">
+                <input 
+                    type="text" 
+                    id="location-input" 
+                    placeholder="Enter city name (e.g., Tokyo, Paris, New York...)"
+                >
+                <button class="btn-primary" id="search-btn">
+                    <span>Get Forecast</span>
+                </button>
+            </div>
+
+            <div class="quick-cities" id="quick-cities"></div>
+        </div>
+
+        <!-- Current Location Info -->
+        <div class="glass-card location-card" id="current-location" style="display: none;">
+            <div class="location-main">
+                <div class="location-icon">📍</div>
+                <div class="location-details">
+                    <h3 id="location-name">Loading...</h3>
+                    <p id="location-coords"></p>
+                </div>
+            </div>
+            <div class="location-meta">
+                <div class="current-temp" id="current-temp">--°</div>
+                <div class="current-condition" id="current-condition">--</div>
+            </div>
+            <div class="last-updated" id="last-updated"></div>
+        </div>
+
+        <!-- View Toggle -->
+        <div class="view-toggle" id="view-toggle" style="display: none;">
+            <button class="toggle-btn active" data-view="hourly">
+                <span class="toggle-icon">🕐</span>
+                <span>Hourly (24h)</span>
+            </button>
+            <button class="toggle-btn" data-view="daily">
+                <span class="toggle-icon">📅</span>
+                <span>Daily (7-16 days)</span>
+            </button>
+        </div>
+
+        <!-- Forecast Toggle (for daily view) -->
+        <div class="forecast-toggle" id="forecast-toggle" style="display: none;">
+            <button class="toggle-btn-sm active" data-days="7">7 Days</button>
+            <button class="toggle-btn-sm" data-days="16">16 Days</button>
+        </div>
+
+        <!-- Loading State -->
+        <div class="loading-container" id="loading" style="display: none;">
+            <div class="loading-orbit">
+                <div class="loading-planet"></div>
+                <div class="loading-moon"></div>
+            </div>
+            <p class="loading-text">Scanning atmosphere...</p>
+        </div>
+
+        <!-- Hourly Forecast -->
+        <div class="glass-card hourly-section" id="hourly-section" style="display: none;">
+            <div class="card-header">
+                <span class="card-icon">🕐</span>
+                <h2>24-Hour Forecast</h2>
+            </div>
+            <div class="hourly-scroll" id="hourly-grid"></div>
+        </div>
+
+        <!-- Daily Forecast -->
+        <div class="daily-section" id="daily-section" style="display: none;">
+            <div class="forecast-grid" id="forecast-grid"></div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <p>Powered by Open-Meteo API • NASA Space Apps Challenge 2025</p>
+        </footer>
+    </div>
+
+    <script src="consumer.js"></script>
+</body>
+</html>
