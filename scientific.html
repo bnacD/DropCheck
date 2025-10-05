@@ -6,624 +6,203 @@
     <title>DropCheck Scientific - NASA Data Analysis</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
-    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'EB Garamond', serif;
-            background: #0d1117;
-            color: #e6edf3;
-            overflow-x: hidden;
-            min-height: 100vh;
-        }
-
-        .space-bg {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 0;
-            background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
-        }
-
-        /* Language Selector */
-        .lang-selector {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 1000;
-            background: rgba(22, 27, 34, 0.9);
-            border: 1px solid rgba(46, 169, 223, 0.3);
-            border-radius: 10px;
-            padding: 8px 16px;
-        }
-
-        .lang-selector select {
-            background: transparent;
-            border: none;
-            color: #2ea9df;
-            font-family: 'EB Garamond', serif;
-            font-size: 0.95em;
-            font-weight: 600;
-            cursor: pointer;
-            outline: none;
-        }
-
-        .container {
-            position: relative;
-            z-index: 2;
-            max-width: 1800px;
-            margin: 0 auto;
-            padding: 30px;
-        }
-
-        .header {
-            background: linear-gradient(135deg, rgba(22, 27, 34, 0.95), rgba(13, 17, 23, 0.95));
-            backdrop-filter: blur(30px);
-            border: 1px solid rgba(46, 169, 223, 0.2);
-            border-radius: 20px;
-            padding: 40px;
-            margin-bottom: 30px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-            text-align: center;
-        }
-
-        .back-link {
-            position: absolute;
-            top: 20px;
-            left: 25px;
-            color: #2ea9df;
-            text-decoration: none;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-
-        .back-link:hover {
-            color: #58bdff;
-            transform: translateX(-5px);
-        }
-
-        .header h1 {
-            font-size: clamp(2em, 5vw, 3em);
-            font-weight: 700;
-            color: #2ea9df;
-            margin-bottom: 10px;
-        }
-
-        .header p {
-            color: rgba(230, 237, 243, 0.7);
-            font-size: 1.1em;
-        }
-
-        .main-grid {
-            display: grid;
-            grid-template-columns: 480px 1fr;
-            gap: 25px;
-            margin-bottom: 30px;
-        }
-
-        .glass-panel {
-            background: linear-gradient(135deg, rgba(22, 27, 34, 0.85), rgba(13, 17, 23, 0.85));
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(46, 169, 223, 0.2);
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-        }
-
-        .panel-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 25px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid rgba(46, 169, 223, 0.2);
-        }
-
-        .panel-icon {
-            font-size: 1.8em;
-        }
-
-        .panel-header h2 {
-            font-size: 1.4em;
-            font-weight: 600;
-            color: #2ea9df;
-        }
-
-        .mode-selector {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            margin-bottom: 25px;
-        }
-
-        .mode-btn {
-            background: rgba(22, 27, 34, 0.8);
-            border: 2px solid rgba(46, 169, 223, 0.3);
-            color: rgba(230, 237, 243, 0.7);
-            padding: 15px 12px;
-            border-radius: 12px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.85em;
-            transition: all 0.3s ease;
-            text-align: center;
-            font-family: 'EB Garamond', serif;
-        }
-
-        .mode-btn:hover {
-            border-color: #2ea9df;
-            background: rgba(46, 169, 223, 0.1);
-        }
-
-        .mode-btn.active {
-            background: linear-gradient(135deg, #2ea9df, #1e6091);
-            border-color: transparent;
-            color: #fff;
-            box-shadow: 0 4px 12px rgba(46, 169, 223, 0.4);
-        }
-
-        #map {
-            height: 380px;
-            border-radius: 15px;
-            margin-bottom: 20px;
-            border: 1px solid rgba(46, 169, 223, 0.3);
-        }
-
-        .coordinates-display {
-            background: rgba(46, 169, 223, 0.1);
-            border: 1px solid rgba(46, 169, 223, 0.3);
-            padding: 12px;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            font-family: monospace;
-            text-align: center;
-            color: #2ea9df;
-            font-size: 0.95em;
-        }
-
-        .input-group {
-            margin-bottom: 20px;
-        }
-
-        .input-group label {
-            display: block;
-            margin-bottom: 10px;
-            color: rgba(230, 237, 243, 0.9);
-            font-weight: 600;
-            font-size: 0.9em;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .input-group input,
-        .input-group select {
-            width: 100%;
-            padding: 14px 18px;
-            background: rgba(22, 27, 34, 0.9);
-            border: 1px solid rgba(46, 169, 223, 0.3);
-            border-radius: 10px;
-            color: #e6edf3;
-            font-size: 1em;
-            font-family: 'EB Garamond', serif;
-        }
-
-        .location-chips {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-
-        .location-chip {
-            background: rgba(46, 169, 223, 0.15);
-            border: 1px solid rgba(46, 169, 223, 0.4);
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 0.85em;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .location-chip:hover {
-            background: rgba(46, 169, 223, 0.25);
-            transform: translateY(-2px);
-        }
-
-        .btn-analyze {
-            background: linear-gradient(135deg, #2ea9df, #1e6091);
-            color: white;
-            border: none;
-            padding: 16px 32px;
-            border-radius: 12px;
-            font-size: 1.05em;
-            font-weight: 700;
-            cursor: pointer;
-            width: 100%;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(46, 169, 223, 0.3);
-            font-family: 'EB Garamond', serif;
-        }
-
-        .btn-analyze:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(46, 169, 223, 0.5);
-        }
-
-        .results-container {
-            min-height: 400px;
-        }
-
-        .result-card {
-            background: rgba(22, 27, 34, 0.6);
-            border: 1px solid rgba(46, 169, 223, 0.3);
-            border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 20px;
-            animation: slideIn 0.5s ease-out;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .result-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 15px;
-        }
-
-        .metric-box {
-            background: rgba(13, 17, 23, 0.6);
-            border: 1px solid rgba(46, 169, 223, 0.2);
-            border-radius: 12px;
-            padding: 20px;
-            text-align: center;
-        }
-
-        .metric-label {
-            color: rgba(230, 237, 243, 0.6);
-            font-size: 0.8em;
-            text-transform: uppercase;
-            margin-bottom: 10px;
-            letter-spacing: 0.5px;
-        }
-
-        .metric-value {
-            font-size: 2.2em;
-            font-weight: 700;
-            color: #2ea9df;
-        }
-
-        .metric-unit {
-            color: rgba(230, 237, 243, 0.5);
-            font-size: 0.85em;
-            margin-top: 5px;
-        }
-
-        /* Chart Container */
-        .chart-container {
-            background: rgba(22, 27, 34, 0.6);
-            border: 1px solid rgba(46, 169, 223, 0.3);
-            border-radius: 15px;
-            padding: 25px;
-            margin-top: 20px;
-        }
-
-        .chart-container canvas {
-            max-height: 350px;
-        }
-
-        /* AI Chat Widget */
-        .ai-widget {
-            position: fixed;
-            bottom: 25px;
-            right: 25px;
-            z-index: 1000;
-        }
-
-        .ai-toggle-btn {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #2ea9df, #1e6091);
-            border: none;
-            color: white;
-            font-size: 1.8em;
-            cursor: pointer;
-            box-shadow: 0 4px 20px rgba(46, 169, 223, 0.4);
-            transition: all 0.3s ease;
-        }
-
-        .ai-toggle-btn:hover {
-            transform: scale(1.1);
-            box-shadow: 0 6px 30px rgba(46, 169, 223, 0.6);
-        }
-
-        .ai-chat-window {
-            display: none;
-            position: fixed;
-            bottom: 100px;
-            right: 25px;
-            width: 380px;
-            height: 520px;
-            background: linear-gradient(135deg, rgba(22, 27, 34, 0.98), rgba(13, 17, 23, 0.98));
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(46, 169, 223, 0.3);
-            border-radius: 20px;
-            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.6);
-            flex-direction: column;
-        }
-
-        .ai-chat-window.active {
-            display: flex;
-        }
-
-        .ai-chat-header {
-            padding: 20px;
-            border-bottom: 1px solid rgba(46, 169, 223, 0.2);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .ai-chat-header h3 {
-            color: #2ea9df;
-            font-size: 1.2em;
-            font-weight: 700;
-        }
-
-        .ai-lang-select {
-            background: rgba(46, 169, 223, 0.15);
-            border: 1px solid rgba(46, 169, 223, 0.3);
-            color: #2ea9df;
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-size: 0.85em;
-            font-family: 'EB Garamond', serif;
-            cursor: pointer;
-        }
-
-        .ai-chat-body {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-        }
-
-        .ai-message {
-            background: rgba(46, 169, 223, 0.1);
-            border: 1px solid rgba(46, 169, 223, 0.2);
-            padding: 12px 16px;
-            border-radius: 12px;
-            margin-bottom: 12px;
-            color: rgba(230, 237, 243, 0.9);
-            font-size: 0.95em;
-            line-height: 1.6;
-        }
-
-        .ai-chat-input {
-            padding: 15px;
-            border-top: 1px solid rgba(46, 169, 223, 0.2);
-        }
-
-        .ai-input-box {
-            width: 100%;
-            background: rgba(22, 27, 34, 0.8);
-            border: 1px solid rgba(46, 169, 223, 0.3);
-            color: #e6edf3;
-            padding: 10px 14px;
-            border-radius: 10px;
-            font-family: 'EB Garamond', serif;
-            resize: none;
-        }
-
-        .loading {
-            text-align: center;
-            padding: 60px 20px;
-        }
-
-        .loading-ring {
-            width: 60px;
-            height: 60px;
-            border: 3px solid rgba(46, 169, 223, 0.2);
-            border-top-color: #2ea9df;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .loading-text {
-            color: #2ea9df;
-            font-size: 1.1em;
-            font-weight: 600;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 80px 30px;
-        }
-
-        .empty-icon {
-            font-size: 4em;
-            margin-bottom: 20px;
-            opacity: 0.4;
-        }
-
-        .empty-state h3 {
-            font-size: 1.5em;
-            margin-bottom: 12px;
-            color: #2ea9df;
-        }
-
-        .empty-state p {
-            color: rgba(230, 237, 243, 0.6);
-            font-size: 1em;
-        }
-
-        .credits-footer {
-            background: rgba(22, 27, 34, 0.6);
-            border: 1px solid rgba(46, 169, 223, 0.2);
-            border-radius: 15px;
-            padding: 20px;
-            margin-top: 20px;
-            text-align: center;
-            color: rgba(230, 237, 243, 0.6);
-            font-size: 0.9em;
-            line-height: 1.8;
-        }
-
-        .credits-footer strong {
-            color: #2ea9df;
-        }
-
-        .parama-credit {
-            color: #2ea9df;
-            font-weight: 700;
-            margin-top: 10px;
-        }
-
-        @media (max-width: 1200px) {
-            .main-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width: 768px) {
-            .ai-chat-window {
-                width: calc(100vw - 40px);
-                right: 20px;
-                bottom: 90px;
-            }
-
-            .mode-selector {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="scientific.css">
 </head>
 <body>
     <div class="space-bg"></div>
     
-    <div class="lang-selector">
-        <select id="lang-select" onchange="changeLanguage(this.value)">
+    <div class="lang-selector" data-tooltip="Cambia el idioma de la interfaz">
+        <select id="lang-select">
             <option value="en">English</option>
             <option value="es">Español</option>
         </select>
     </div>
-    
+
     <div class="container">
         <header class="header">
-            <a href="index.html" class="back-link" data-en="← Back to Home" data-es="← Volver al Inicio">← Back to Home</a>
-            <h1 data-en="🛰 Scientific Analysis" data-es="🛰 Análisis Científico">🛰 Scientific Analysis</h1>
-            <p data-en="NASA POWER API • 20+ Years Historical Data • AI-Powered Insights" data-es="API NASA POWER • Más de 20 Años de Datos Históricos • Insights Impulsados por IA">NASA POWER API • 20+ Years Historical Data • AI-Powered Insights</p>
+            <a href="landing.html" class="back-link" data-tooltip="Volver a la página principal">← Back to Home</a>
+            <h1>🛰️ Scientific Analysis</h1>
+            <p>NASA POWER API • 20+ Years Historical Data • AI-Powered Insights</p>
         </header>
 
         <div class="main-grid">
+            <!-- LEFT PANEL -->
             <div class="glass-panel">
                 <div class="panel-header">
                     <span class="panel-icon">🎯</span>
-                    <h2 data-en="Configuration" data-es="Configuración">Configuration</h2>
+                    <h2>Configuration</h2>
                 </div>
 
+                <!-- Mode Selector -->
                 <div class="mode-selector">
-                    <button class="mode-btn active" data-mode="single" data-en="📍 Point" data-es="📍 Punto">📍 Point</button>
-                    <button class="mode-btn" data-mode="range" data-en="📅 Range" data-es="📅 Rango">📅 Range</button>
-                    <button class="mode-btn" data-mode="polygon" data-en="🗺 Area" data-es="🗺 Área">🗺 Area</button>
-                    <button class="mode-btn" data-mode="flood" data-en="💧 Flood" data-es="💧 Inundación">💧 Flood</button>
+                    <button class="mode-btn active" data-mode="single" data-tooltip="Analiza un punto específico del mapa con datos históricos">📍 Point</button>
+                    <button class="mode-btn" data-mode="range" data-tooltip="Compara patrones climáticos entre múltiples fechas">📅 Range</button>
+                    <button class="mode-btn" data-mode="polygon" data-tooltip="Estudia un área completa dibujada en el mapa">🗺️ Area</button>
+                    <button class="mode-btn" data-mode="flood" data-tooltip="Evalúa riesgo de inundaciones basado en precipitación y humedad">💧 Flood</button>
                 </div>
 
-                <div id="map"></div>
-                <div class="coordinates-display" id="coordinates" data-en="📍 Select location" data-es="📍 Seleccionar ubicación">📍 Select location</div>
+                <!-- Map -->
+                <div id="map" data-tooltip="Haz clic en el mapa para seleccionar ubicación o arrastra el marcador"></div>
+                <div class="coordinates-display" id="coordinates">📍 Select location</div>
 
+                <!-- Quick Locations -->
                 <div class="input-group">
-                    <label data-en="⚡ Quick Locations" data-es="⚡ Ubicaciones Rápidas">⚡ Quick Locations</label>
+                    <label>⚡ Quick Locations</label>
                     <div class="location-chips" id="quick-locations"></div>
                 </div>
 
+                <!-- Date Selection -->
                 <div id="date-container-single">
                     <div class="input-group">
-                        <label data-en="📅 Date" data-es="📅 Fecha">📅 Date</label>
-                        <input type="date" id="date-input">
+                        <label>📅 Date</label>
+                        <input type="date" id="date-input" data-tooltip="Selecciona la fecha para analizar datos históricos">
                     </div>
                 </div>
 
                 <div id="date-container-range" style="display: none;">
                     <div class="input-group">
-                        <label data-en="📅 Start Date" data-es="📅 Fecha Inicio">📅 Start Date</label>
+                        <label>📅 Start Date</label>
                         <input type="date" id="start-date">
                     </div>
                     <div class="input-group">
-                        <label data-en="📅 End Date" data-es="📅 Fecha Fin">📅 End Date</label>
+                        <label>📅 End Date</label>
                         <input type="date" id="end-date">
                     </div>
                 </div>
 
-                <button class="btn-analyze" id="analyze-btn">
-                    <span data-en="⚡ Analyze with NASA Data" data-es="⚡ Analizar con Datos de NASA">⚡ Analyze with NASA Data</span>
+                <!-- Parameter Selection -->
+                <div class="input-group">
+                    <label>🌡️ Parameter</label>
+                    <select id="parameter-select">
+                        <option value="T2M">Temperature (Average)</option>
+                        <option value="T2M_MAX">Temperature (Max)</option>
+                        <option value="T2M_MIN">Temperature (Min)</option>
+                        <option value="PRECTOTCORR">Precipitation</option>
+                        <option value="WS2M">Wind Speed</option>
+                        <option value="RH2M">Relative Humidity</option>
+                        <option value="ALLSKY_SFC_SW_DWN">Solar Radiation</option>
+                    </select>
+                </div>
+
+                <!-- Analyze Button -->
+                <button class="btn-analyze" id="analyze-btn" data-tooltip="Ejecuta el análisis con datos reales de NASA POWER (20+ años de historial climático)">
+                    ⚡ Analyze with NASA Data
+                </button>
+
+                <!-- Export Button -->
+                <button class="btn-analyze export-btn" id="export-btn" style="display: none; background: linear-gradient(135deg, #10b981, #059669); margin-top: 15px;">
+                    💾 Export Data (CSV/JSON)
                 </button>
             </div>
 
+            <!-- RIGHT PANEL -->
             <div class="glass-panel">
                 <div class="panel-header">
                     <span class="panel-icon">📊</span>
-                    <h2 data-en="Results" data-es="Resultados">Results</h2>
+                    <h2>Results</h2>
                 </div>
 
                 <div class="results-container" id="results-container">
                     <div class="empty-state">
                         <div class="empty-icon">🎯</div>
-                        <h3 data-en="Ready to Analyze" data-es="Listo para Analizar">Ready to Analyze</h3>
-                        <p data-en="Select mode, location, and date to begin comprehensive NASA data analysis" data-es="Selecciona modo, ubicación y fecha para comenzar el análisis completo de datos NASA">Select mode, location, and date to begin comprehensive NASA data analysis</p>
+                        <h3>Ready to Analyze</h3>
+                        <p>Select mode, location, parameter and date to begin comprehensive NASA data analysis</p>
                     </div>
                 </div>
+
+                <!-- Charts Section -->
+                <div id="charts-section" style="display: none;"></div>
             </div>
         </div>
 
         <div class="credits-footer">
             <strong>NASA Space Apps Challenge 2025</strong><br>
-            <span data-en="Powered by NASA POWER API (20+ years climate data)" data-es="Impulsado por NASA POWER API (más de 20 años de datos climáticos)">Powered by NASA POWER API (20+ years climate data)</span><br>
-            <span data-en="Data sources: NASA Langley Research Center • Open-Meteo API" data-es="Fuentes de datos: Centro de Investigación Langley de NASA • API Open-Meteo">Data sources: NASA Langley Research Center • Open-Meteo API</span><br>
-            <span data-en="Maps: OpenStreetMap Contributors • Leaflet.js" data-es="Mapas: Contribuidores de OpenStreetMap • Leaflet.js">Maps: OpenStreetMap Contributors • Leaflet.js</span><br>
-            <span data-en="Built with real satellite and weather station data" data-es="Construido con datos reales de satélites y estaciones meteorológicas">Built with real satellite and weather station data</span>
+            <span>Powered by NASA POWER API (20+ years climate data)</span><br>
+            <span>Data sources: NASA Langley Research Center • Open-Meteo API</span><br>
+            <span>Maps: OpenStreetMap Contributors • Leaflet.js</span><br>
+            <span>Built with real satellite and weather station data</span>
             <div class="parama-credit">Developed by PARAMÁ Legends</div>
         </div>
     </div>
 
-    <!-- AI Chat Widget -->
+    <!-- AI WIDGET -->
     <div class="ai-widget">
-        <button class="ai-toggle-btn" id="ai-toggle">🤖</button>
-        <div class="ai-chat-window" id="ai-chat">
+        <button class="ai-toggle-btn" id="ai-toggle-btn" data-tooltip="Abre el asistente de IA para interpretar los resultados del análisis">🤖</button>
+        
+        <div class="ai-chat-window" id="ai-chat-container" style="display: none;">
             <div class="ai-chat-header">
-                <h3 data-en="AI Assistant" data-es="Asistente IA">AI Assistant</h3>
-                <select class="ai-lang-select" id="ai-lang">
-                    <option value="en">English</option>
-                    <option value="es">Español</option>
-                    <option value="pt">Português</option>
-                    <option value="fr">Français</option>
-                    <option value="de">Deutsch</option>
-                </select>
+                <div class="ai-header-left">
+                    <span class="ai-icon">🤖</span>
+                    <div>
+                        <h3>AI Weather Assistant</h3>
+                        <p class="ai-status" id="ai-status">Checking Ollama...</p>
+                    </div>
+                </div>
+                <button class="ai-close-btn" id="ai-close-btn">✕</button>
             </div>
-            <div class="ai-chat-body" id="ai-messages">
-                <div class="ai-message" data-en="Hello! I can help you interpret weather data and provide insights. Ask me anything about your analysis results!" data-es="¡Hola! Puedo ayudarte a interpretar datos meteorológicos y proporcionar insights. ¡Pregúntame sobre tus resultados de análisis!">Hello! I can help you interpret weather data and provide insights. Ask me anything about your analysis results!</div>
+
+            <div class="ai-chat-body" id="ai-chat-body">
+                <div class="ai-message ai-message-bot">
+                    <div class="ai-avatar">🤖</div>
+                    <div class="ai-bubble">
+                        <p>Hello! I'm your AI weather assistant powered by Ollama.</p>
+                        <p>I can help you interpret climate data, understand trends, and make informed decisions about weather conditions.</p>
+                        <p><strong>Ask me about:</strong></p>
+                        <ul>
+                            <li>Weather patterns and trends</li>
+                            <li>Best dates for outdoor activities</li>
+                            <li>Risk assessment for weather events</li>
+                            <li>Data interpretation and insights</li>
+                        </ul>
+                    </div>
+                </div>
             </div>
-            <div class="ai-chat-input">
-                <textarea class="ai-input-box" id="ai-input" placeholder="Ask about the data..." rows="2"></textarea>
+
+            <div class="ai-chat-footer">
+                <div class="ai-input-container">
+                    <textarea id="ai-input" placeholder="Ask about weather data..." rows="2"></textarea>
+                    <button class="ai-send-btn" id="ai-send-btn"><span>📤</span></button>
+                </div>
+                <div class="ai-footer-info">
+                    <span class="ai-model-info" id="ai-model-info">Model: mistral</span>
+                    <button class="ai-settings-btn" id="ai-settings-btn">⚙️</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Settings Modal -->
+        <div class="ai-settings-modal" id="ai-settings-modal" style="display: none;">
+            <div class="ai-settings-content">
+                <h3>🔧 Ollama Settings</h3>
+                
+                <div class="setting-group">
+                    <label>Ollama URL:</label>
+                    <input type="text" id="ollama-url" value="http://localhost:11434" />
+                </div>
+
+                <div class="setting-group">
+                    <label>Model:</label>
+                    <select id="ollama-model">
+                        <option value="mistral">Mistral</option>
+                        <option value="llama2">Llama 2</option>
+                        <option value="codellama">Code Llama</option>
+                        <option value="neural-chat">Neural Chat</option>
+                    </select>
+                </div>
+
+                <div class="setting-group">
+                    <label>Temperature:</label>
+                    <input type="range" id="ollama-temp" min="0" max="1" step="0.1" value="0.7" />
+                    <span id="temp-value">0.7</span>
+                </div>
+
+                <div class="setting-actions">
+                    <button class="btn-secondary" id="test-connection-btn">🔌 Test Connection</button>
+                    <button class="btn-primary" id="save-settings-btn">💾 Save Settings</button>
+                </div>
+
+                <div class="connection-status" id="connection-status"></div>
             </div>
         </div>
     </div>
@@ -631,556 +210,6 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script>
-const NASA_API = 'https://power.larc.nasa.gov/api/temporal/daily/point';
-
-let map, marker, drawnItems, currentPolygon;
-let selectedLat = -25.2637, selectedLon = -57.5759;
-let currentMode = 'single';
-let currentData = null;
-let historicalChart = null;
-
-const quickLocations = [
-    { name: 'Asunción', coords: [-25.2637, -57.5759] },
-    { name: 'New York', coords: [40.7128, -74.0060] },
-    { name: 'Tokyo', coords: [35.6762, 139.6503] },
-    { name: 'Paris', coords: [48.8566, 2.3522] }
-];
-
-const translations = {
-    en: {
-        analyzing: 'Analyzing NASA data...',
-        selectDate: 'Please select a date',
-        selectRange: 'Please select date range',
-        drawArea: 'Please draw an area first',
-        noData: 'No data available',
-        error: 'Error'
-    },
-    es: {
-        analyzing: 'Analizando datos de NASA...',
-        selectDate: 'Por favor selecciona una fecha',
-        selectRange: 'Por favor selecciona un rango de fechas',
-        drawArea: 'Por favor dibuja un área primero',
-        noData: 'No hay datos disponibles',
-        error: 'Error'
-    }
-};
-
-let currentLang = 'en';
-
-document.addEventListener('DOMContentLoaded', () => {
-    initMap();
-    initQuickLocations();
-    setDefaultDates();
-    setupEventListeners();
-    loadSavedLanguage();
-});
-
-function loadSavedLanguage() {
-    const saved = localStorage.getItem('selectedLanguage') || 'en';
-    currentLang = saved;
-    document.getElementById('lang-select').value = saved;
-    if (saved !== 'en') {
-        changeLanguage(saved);
-    }
-}
-
-function changeLanguage(lang) {
-    currentLang = lang;
-    document.querySelectorAll('[data-en]').forEach(el => {
-        if (lang === 'en') {
-            el.textContent = el.getAttribute('data-en');
-        } else if (lang === 'es') {
-            el.textContent = el.getAttribute('data-es');
-        }
-    });
-    localStorage.setItem('selectedLanguage', lang);
-}
-
-function initMap() {
-    map = L.map('map').setView([selectedLat, selectedLon], 3);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-    
-    drawnItems = new L.FeatureGroup();
-    map.addLayer(drawnItems);
-    
-    const drawControl = new L.Control.Draw({
-        edit: { featureGroup: drawnItems },
-        draw: {
-            polygon: true,
-            rectangle: true,
-            circle: false,
-            circlemarker: false,
-            polyline: false,
-            marker: false
-        }
-    });
-    map.addControl(drawControl);
-    
-    marker = L.marker([selectedLat, selectedLon], { draggable: true }).addTo(map);
-    
-    marker.on('dragend', e => {
-        const p = marker.getLatLng();
-        selectedLat = p.lat.toFixed(4);
-        selectedLon = p.lng.toFixed(4);
-        updateCoordinates();
-    });
-    
-    map.on('click', e => {
-        selectedLat = e.latlng.lat.toFixed(4);
-        selectedLon = e.latlng.lng.toFixed(4);
-        marker.setLatLng([selectedLat, selectedLon]);
-        updateCoordinates();
-    });
-    
-    map.on(L.Draw.Event.CREATED, e => {
-        drawnItems.clearLayers();
-        drawnItems.addLayer(e.layer);
-        currentPolygon = e.layer;
-        alert('✅ Area created! Ready to analyze.');
-    });
-    
-    updateCoordinates();
-}
-
-function initQuickLocations() {
-    const container = document.getElementById('quick-locations');
-    quickLocations.forEach(loc => {
-        const chip = document.createElement('div');
-        chip.className = 'location-chip';
-        chip.textContent = loc.name;
-        chip.onclick = () => {
-            selectedLat = loc.coords[0];
-            selectedLon = loc.coords[1];
-            map.setView([selectedLat, selectedLon], 5);
-            marker.setLatLng([selectedLat, selectedLon]);
-            updateCoordinates();
-        };
-        container.appendChild(chip);
-    });
-}
-
-function setupEventListeners() {
-    document.querySelectorAll('.mode-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            currentMode = btn.dataset.mode;
-            updateDateContainers();
-        });
-    });
-    
-    document.getElementById('analyze-btn').addEventListener('click', handleAnalyze);
-    
-    // AI Toggle
-    document.getElementById('ai-toggle').addEventListener('click', () => {
-        document.getElementById('ai-chat').classList.toggle('active');
-    });
-    
-    document.getElementById('ai-input').addEventListener('keypress', e => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            handleAIQuery();
-        }
-    });
-
-    document.getElementById('lang-select').addEventListener('change', e => {
-        changeLanguage(e.target.value);
-    });
-}
-
-function updateDateContainers() {
-    const isSingle = currentMode !== 'range';
-    document.getElementById('date-container-single').style.display = isSingle ? 'block' : 'none';
-    document.getElementById('date-container-range').style.display = isSingle ? 'none' : 'block';
-}
-
-async function handleAnalyze() {
-    if (currentMode === 'single') {
-        await analyzeSinglePoint();
-    } else if (currentMode === 'range') {
-        await analyzeDateRange();
-    } else if (currentMode === 'polygon') {
-        await analyzePolygon();
-    } else if (currentMode === 'flood') {
-        await analyzeFloodRisk();
-    }
-}
-
-async function analyzeSinglePoint() {
-    const date = document.getElementById('date-input').value;
-    if (!date) return alert(translations[currentLang].selectDate);
-    
-    showLoading();
-    
-    try {
-        const dateObj = new Date(date);
-        const currentYear = new Date().getFullYear();
-        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-        const day = String(dateObj.getDate()).padStart(2, '0');
-        
-        const allData = [];
-        
-        for (let y = currentYear - 20; y < currentYear; y++) {
-            const dateStr = `${y}${month}${day}`;
-            try {
-                const data = await fetchNASA('T2M', selectedLat, selectedLon, dateStr, dateStr);
-                allData.push(...data);
-            } catch (e) {
-                console.warn(`Failed year ${y}`);
-            }
-        }
-        
-        if (allData.length === 0) throw new Error(translations[currentLang].noData);
-        
-        const values = allData.map(d => d.value);
-        const years = allData.map(d => parseInt(d.date.substring(0, 4)));
-        const stats = calculateStats(values);
-        
-        displayResults(stats, 'Temperature (T2M)', 'T2M', allData.length);
-        displayHistoricalChart(years, values);
-        
-        currentData = { stats, values, param: 'T2M' };
-        
-    } catch (error) {
-        hideLoading();
-        alert(translations[currentLang].error + ': ' + error.message);
-    }
-}
-
-function displayHistoricalChart(years, values) {
-    const chartHtml = `
-        <div class="chart-container">
-            <h3 style="color: #2ea9df; margin-bottom: 15px;" data-en="📈 Historical Trend" data-es="📈 Tendencia Histórica">📈 Historical Trend</h3>
-            <canvas id="historical-chart"></canvas>
-        </div>
-    `;
-    
-    document.getElementById('results-container').insertAdjacentHTML('beforeend', chartHtml);
-    
-    if (currentLang === 'es') {
-        document.querySelector('[data-en="📈 Historical Trend"]').textContent = '📈 Tendencia Histórica';
-    }
-    
-    const ctx = document.getElementById('historical-chart').getContext('2d');
-    
-    if (historicalChart) {
-        historicalChart.destroy();
-    }
-    
-    historicalChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: years,
-            datasets: [{
-                label: currentLang === 'en' ? 'Temperature (°C)' : 'Temperatura (°C)',
-                data: values,
-                borderColor: '#2ea9df',
-                backgroundColor: 'rgba(46, 169, 223, 0.1)',
-                borderWidth: 2,
-                tension: 0.4,
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: true,
-            plugins: {
-                legend: {
-                    labels: {
-                        color: '#e6edf3',
-                        font: {
-                            family: 'EB Garamond',
-                            size: 12
-                        }
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    ticks: { color: '#e6edf3' },
-                    grid: { color: 'rgba(46, 169, 223, 0.1)' }
-                },
-                y: {
-                    ticks: { color: '#e6edf3' },
-                    grid: { color: 'rgba(46, 169, 223, 0.1)' }
-                }
-            }
-        }
-    });
-}
-
-async function analyzeDateRange() {
-    const start = document.getElementById('start-date').value;
-    const end = document.getElementById('end-date').value;
-    if (!start || !end) return alert(translations[currentLang].selectRange);
-    
-    showLoading();
-    setTimeout(() => {
-        hideLoading();
-        displayMockRangeResults();
-    }, 2000);
-}
-
-async function analyzePolygon() {
-    if (!currentPolygon) return alert(translations[currentLang].drawArea);
-    
-    const date = document.getElementById('date-input').value;
-    if (!date) return alert(translations[currentLang].selectDate);
-    
-    showLoading();
-    setTimeout(() => {
-        hideLoading();
-        displayMockPolygonResults();
-    }, 3000);
-}
-
-async function analyzeFloodRisk() {
-    const date = document.getElementById('date-input').value;
-    if (!date) return alert(translations[currentLang].selectDate);
-    
-    showLoading();
-    setTimeout(() => {
-        hideLoading();
-        displayMockFloodResults();
-    }, 2000);
-}
-
-function displayMockRangeResults() {
-    const title = currentLang === 'en' ? 'Date Range Analysis' : 'Análisis de Rango de Fechas';
-    const param = currentLang === 'en' ? 'Parameter: Temperature (°C)' : 'Parámetro: Temperatura (°C)';
-    
-    document.getElementById('results-container').innerHTML = `
-        <div class="result-card">
-            <h3 style="color: #2ea9df; margin-bottom: 20px; font-size: 1.3em;">📅 ${title}</h3>
-            <p style="color: rgba(230, 237, 243, 0.7); margin-bottom: 20px;">
-                ${currentLang === 'en' ? 'Comparing temperature patterns across selected date range.' : 'Comparando patrones de temperatura en el rango de fechas seleccionado.'}<br>
-                <strong>${param}</strong>
-            </p>
-            <div class="result-grid">
-                <div class="metric-box">
-                    <div class="metric-label">${currentLang === 'en' ? 'Best Date' : 'Mejor Fecha'}</div>
-                    <div class="metric-value">Mar 15</div>
-                    <div class="metric-unit">22.3°C avg</div>
-                </div>
-                <div class="metric-box">
-                    <div class="metric-label">${currentLang === 'en' ? 'Worst Date' : 'Peor Fecha'}</div>
-                    <div class="metric-value">Jul 28</div>
-                    <div class="metric-unit">35.1°C avg</div>
-                </div>
-                <div class="metric-box">
-                    <div class="metric-label">${currentLang === 'en' ? 'Dates Analyzed' : 'Fechas Analizadas'}</div>
-                    <div class="metric-value">90</div>
-                    <div class="metric-unit">${currentLang === 'en' ? 'days' : 'días'}</div>
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-function displayMockPolygonResults() {
-    document.getElementById('results-container').innerHTML = `
-        <div class="result-card">
-            <h3 style="color: #2ea9df; margin-bottom: 20px;">🗺 ${currentLang === 'en' ? 'Polygon Area Analysis' : 'Análisis de Área Poligonal'}</h3>
-            <div class="result-grid">
-                <div class="metric-box">
-                    <div class="metric-label">${currentLang === 'en' ? 'Best Location' : 'Mejor Ubicación'}</div>
-                    <div class="metric-value">-25.21</div>
-                    <div class="metric-unit">-57.53</div>
-                </div>
-                <div class="metric-box">
-                    <div class="metric-label">${currentLang === 'en' ? 'Avg Temp' : 'Temp Prom'}</div>
-                    <div class="metric-value">24.5</div>
-                    <div class="metric-unit">°C</div>
-                </div>
-                <div class="metric-box">
-                    <div class="metric-label">${currentLang === 'en' ? 'Points' : 'Puntos'}</div>
-                    <div class="metric-value">36</div>
-                    <div class="metric-unit">${currentLang === 'en' ? 'analyzed' : 'analizados'}</div>
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-function displayMockFloodResults() {
-    document.getElementById('results-container').innerHTML = `
-        <div class="result-card">
-            <h3 style="color: #2ea9df; margin-bottom: 20px;">💧 ${currentLang === 'en' ? 'Flood Risk Assessment' : 'Evaluación de Riesgo de Inundación'}</h3>
-            <div class="result-grid">
-                <div class="metric-box">
-                    <div class="metric-label">${currentLang === 'en' ? 'Risk Level' : 'Nivel de Riesgo'}</div>
-                    <div class="metric-value">${currentLang === 'en' ? 'Low' : 'Bajo'}</div>
-                    <div class="metric-unit">12%</div>
-                </div>
-                <div class="metric-box">
-                    <div class="metric-label">${currentLang === 'en' ? 'Avg Precip' : 'Precip Prom'}</div>
-                    <div class="metric-value">45</div>
-                    <div class="metric-unit">mm</div>
-                </div>
-                <div class="metric-box">
-                    <div class="metric-label">${currentLang === 'en' ? 'Humidity' : 'Humedad'}</div>
-                    <div class="metric-value">68</div>
-                    <div class="metric-unit">%</div>
-                </div>
-            </div>
-        </div>
-    `;
-}
-
-async function fetchNASA(param, lat, lon, start, end) {
-    const url = `${NASA_API}?parameters=${param}&community=RE&longitude=${lon}&latitude=${lat}&start=${start}&end=${end}&format=JSON`;
-    
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('NASA API error');
-    
-    const json = await res.json();
-    const paramData = json.properties.parameter[param];
-    
-    return Object.entries(paramData)
-        .filter(([_, v]) => v !== -999)
-        .map(([date, value]) => ({ date, value: parseFloat(value.toFixed(2)) }));
-}
-
-function calculateStats(values) {
-    const sorted = [...values].sort((a, b) => a - b);
-    const mean = values.reduce((a, b) => a + b, 0) / values.length;
-    const std = Math.sqrt(values.reduce((s, v) => s + Math.pow(v - mean, 2), 0) / values.length);
-    
-    return {
-        mean: mean.toFixed(1),
-        median: sorted[Math.floor(sorted.length / 2)].toFixed(1),
-        min: sorted[0].toFixed(1),
-        max: sorted[sorted.length - 1].toFixed(1),
-        std: std.toFixed(2),
-        p10: sorted[Math.floor(sorted.length * 0.1)].toFixed(1),
-        p90: sorted[Math.floor(sorted.length * 0.9)].toFixed(1)
-    };
-}
-
-function displayResults(stats, paramName, paramCode, dataPoints) {
-    const unit = paramCode === 'T2M' ? '°C' : '';
-    const title = currentLang === 'en' ? 'Statistical Analysis' : 'Análisis Estadístico';
-    const basedOn = currentLang === 'en' 
-        ? `Analysis based on ${dataPoints} years of NASA POWER data` 
-        : `Análisis basado en ${dataPoints} años de datos de NASA POWER`;
-    
-    const html = `
-        <div class="result-card">
-            <h3 style="color: #2ea9df; margin-bottom: 20px; font-size: 1.3em;">📊 ${title}</h3>
-            <p style="color: rgba(230, 237, 243, 0.7); margin-bottom: 20px;">
-                ${basedOn}<br>
-                <strong>${currentLang === 'en' ? 'Parameter' : 'Parámetro'}:</strong> ${paramName}
-            </p>
-            <div class="result-grid">
-                <div class="metric-box">
-                    <div class="metric-label">${currentLang === 'en' ? 'Average' : 'Promedio'}</div>
-                    <div class="metric-value">${stats.mean}</div>
-                    <div class="metric-unit">${unit}</div>
-                </div>
-                <div class="metric-box">
-                    <div class="metric-label">${currentLang === 'en' ? 'Median' : 'Mediana'}</div>
-                    <div class="metric-value">${stats.median}</div>
-                    <div class="metric-unit">${unit}</div>
-                </div>
-                <div class="metric-box">
-                    <div class="metric-label">${currentLang === 'en' ? 'Minimum' : 'Mínimo'}</div>
-                    <div class="metric-value">${stats.min}</div>
-                    <div class="metric-unit">${unit}</div>
-                </div>
-                <div class="metric-box">
-                    <div class="metric-label">${currentLang === 'en' ? 'Maximum' : 'Máximo'}</div>
-                    <div class="metric-value">${stats.max}</div>
-                    <div class="metric-unit">${unit}</div>
-                </div>
-                <div class="metric-box">
-                    <div class="metric-label">Std Dev</div>
-                    <div class="metric-value">${stats.std}</div>
-                    <div class="metric-unit">${unit}</div>
-                </div>
-                <div class="metric-box">
-                    <div class="metric-label">10th %ile</div>
-                    <div class="metric-value">${stats.p10}</div>
-                    <div class="metric-unit">${unit}</div>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    document.getElementById('results-container').innerHTML = html;
-}
-
-function handleAIQuery() {
-    const input = document.getElementById('ai-input');
-    const query = input.value.trim();
-    if (!query) return;
-    
-    const lang = document.getElementById('ai-lang').value;
-    const messagesDiv = document.getElementById('ai-messages');
-    
-    const userMsg = document.createElement('div');
-    userMsg.className = 'ai-message';
-    userMsg.style.background = 'rgba(46, 169, 223, 0.2)';
-    userMsg.textContent = query;
-    messagesDiv.appendChild(userMsg);
-    
-    input.value = '';
-    
-    setTimeout(() => {
-        const aiMsg = document.createElement('div');
-        aiMsg.className = 'ai-message';
-        
-        if (currentData) {
-            aiMsg.textContent = getAIResponse(query, lang, currentData);
-        } else {
-            aiMsg.textContent = lang === 'es' 
-                ? 'Por favor, ejecuta un análisis primero para que pueda ayudarte con los resultados.'
-                : 'Please run an analysis first so I can help you interpret the results.';
-        }
-        
-        messagesDiv.appendChild(aiMsg);
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
-    }, 800);
-}
-
-function getAIResponse(query, lang, data) {
-    const responses = {
-        en: `Based on the analysis, the average value is ${data.stats.mean}. The data shows a standard deviation of ${data.stats.std}, indicating ${parseFloat(data.stats.std) > 2 ? 'moderate variability' : 'low variability'} in the measurements.`,
-        es: `Según el análisis, el valor promedio es ${data.stats.mean}. Los datos muestran una desviación estándar de ${data.stats.std}, indicando una variabilidad ${parseFloat(data.stats.std) > 2 ? 'moderada' : 'baja'} en las mediciones.`,
-        pt: `Com base na análise, o valor médio é ${data.stats.mean}. Os dados mostram um desvio padrão de ${data.stats.std}, indicando variabilidade ${parseFloat(data.stats.std) > 2 ? 'moderada' : 'baixa'} nas medições.`,
-        fr: `Selon l'analyse, la valeur moyenne est ${data.stats.mean}. Les données montrent un écart type de ${data.stats.std}, indiquant une variabilité ${parseFloat(data.stats.std) > 2 ? 'modérée' : 'faible'} dans les mesures.`,
-        de: `Laut Analyse beträgt der Durchschnittswert ${data.stats.mean}. Die Daten zeigen eine Standardabweichung von ${data.stats.std}, was auf eine ${parseFloat(data.stats.std) > 2 ? 'mäßige' : 'geringe'} Variabilität der Messungen hinweist.`
-    };
-    
-    return responses[lang] || responses.en;
-}
-
-function showLoading() {
-    document.getElementById('results-container').innerHTML = `
-        <div class="loading">
-            <div class="loading-ring"></div>
-            <div class="loading-text">${translations[currentLang].analyzing}</div>
-        </div>
-    `;
-}
-
-function hideLoading() {}
-
-function updateCoordinates() {
-    document.getElementById('coordinates').textContent = `📍 ${selectedLat}, ${selectedLon}`;
-}
-
-function setDefaultDates() {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    document.getElementById('date-input').valueAsDate = tomorrow;
-    document.getElementById('start-date').valueAsDate = tomorrow;
-    const end = new Date(tomorrow);
-    end.setDate(end.getDate() + 30);
-    document.getElementById('end-date').valueAsDate = end;
-}
-
-console.log('🛰 DropCheck Scientific - NASA Real Data');
-    </script>
+    <script src="scientific.js"></script>
 </body>
 </html>

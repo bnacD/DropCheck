@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DropCheck - Weather Intelligence Platform</title>
-    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -13,60 +13,57 @@
         }
 
         body {
-            font-family: 'EB Garamond', serif;
-            background: #0d1117;
-            color: #fff;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #E0F7FA 0%, #F5F7FA 50%, #E8F4F8 100%);
+            color: #1E1E2F;
             overflow-x: hidden;
+            min-height: 100vh;
         }
 
-        .bg-image {
+        .bg-particles {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
             z-index: 0;
-            background-image: url('https://images.pexels.com/photos/15104444/pexels-photo-15104444.jpeg');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
+            background-image: 
+                radial-gradient(circle at 20% 30%, rgba(0, 196, 255, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(130, 255, 210, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(232, 197, 71, 0.05) 0%, transparent 50%);
+            animation: particleFloat 20s ease-in-out infinite;
         }
 
-        .bg-image::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, rgba(13, 17, 23, 0.92), rgba(22, 27, 34, 0.90));
-            backdrop-filter: blur(2px);
+        @keyframes particleFloat {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-20px) scale(1.05); }
         }
 
-        /* Language Selector */
         .lang-selector {
             position: fixed;
-            top: 20px;
-            right: 20px;
+            top: 25px;
+            right: 25px;
             z-index: 1000;
-            background: rgba(22, 27, 34, 0.9);
-            border: 1px solid rgba(46, 169, 223, 0.3);
-            border-radius: 10px;
-            padding: 8px 16px;
-            cursor: pointer;
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(0, 196, 255, 0.3);
+            border-radius: 12px;
+            padding: 10px 20px;
+            box-shadow: 0 8px 32px rgba(0, 196, 255, 0.15);
             transition: all 0.3s ease;
         }
 
         .lang-selector:hover {
-            background: rgba(46, 169, 223, 0.2);
-            border-color: #2ea9df;
+            background: rgba(255, 255, 255, 0.95);
+            border-color: #00C4FF;
+            box-shadow: 0 12px 40px rgba(0, 196, 255, 0.25);
         }
 
         .lang-selector select {
             background: transparent;
             border: none;
-            color: #2ea9df;
-            font-family: 'EB Garamond', serif;
+            color: #1E1E2F;
+            font-family: 'Inter', sans-serif;
             font-size: 0.95em;
             font-weight: 600;
             cursor: pointer;
@@ -76,24 +73,25 @@
         .container {
             position: relative;
             z-index: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 30px;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            padding: 60px 20px 40px;
         }
 
         .logo-section {
             text-align: center;
-            margin-bottom: 60px;
+            margin: 60px 0 80px;
             animation: fadeInDown 1s ease-out;
         }
 
         @keyframes fadeInDown {
             from {
                 opacity: 0;
-                transform: translateY(-30px);
+                transform: translateY(-50px);
             }
             to {
                 opacity: 1;
@@ -102,64 +100,76 @@
         }
 
         .logo {
+            font-family: 'Orbitron', sans-serif;
             font-size: clamp(3.5em, 8vw, 7em);
-            font-weight: 800;
-            background: linear-gradient(135deg, #2ea9df, #1e6091, #0ea5e9);
+            font-weight: 900;
+            background: linear-gradient(135deg, #00C4FF 0%, #82FFD2 50%, #00C4FF 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 20px;
-            letter-spacing: 0.08em;
-            animation: glowPulse 3s ease-in-out infinite;
-            filter: drop-shadow(0 0 30px rgba(46, 169, 223, 0.5));
+            background-clip: text;
+            margin-bottom: 25px;
+            letter-spacing: 0.05em;
+            position: relative;
+            text-shadow: 0 0 40px rgba(0, 196, 255, 0.3);
         }
 
-        @keyframes glowPulse {
-            0%, 100% {
-                filter: drop-shadow(0 0 30px rgba(46, 169, 223, 0.5));
-            }
-            50% {
-                filter: drop-shadow(0 0 50px rgba(46, 169, 223, 0.8));
-            }
+        .logo::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #E8C547, transparent);
+            animation: goldenGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes goldenGlow {
+            0%, 100% { opacity: 0.6; width: 120px; }
+            50% { opacity: 1; width: 180px; }
         }
 
         .tagline {
-            font-size: clamp(1.3em, 3vw, 2em);
-            color: rgba(255, 255, 255, 0.9);
-            font-weight: 500;
+            font-family: 'Inter', sans-serif;
+            font-size: clamp(1.3em, 3vw, 1.8em);
+            color: #1E1E2F;
+            font-weight: 600;
             margin-bottom: 15px;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            letter-spacing: -0.02em;
         }
 
         .subtitle {
-            font-size: clamp(1em, 2vw, 1.2em);
-            color: rgba(255, 255, 255, 0.7);
+            font-size: clamp(1em, 2vw, 1.15em);
+            color: rgba(30, 30, 47, 0.7);
             font-weight: 400;
-            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            margin-bottom: 25px;
         }
 
         .nasa-badge {
             display: inline-block;
-            background: rgba(46, 169, 223, 0.2);
-            border: 2px solid rgba(46, 169, 223, 0.5);
-            padding: 12px 30px;
+            background: rgba(0, 196, 255, 0.1);
+            border: 2px solid #00C4FF;
+            padding: 12px 32px;
             border-radius: 50px;
-            font-size: 1em;
+            font-size: 0.95em;
             font-weight: 700;
-            color: #2ea9df;
-            margin-top: 20px;
-            animation: badgePulse 2s ease-in-out infinite;
+            color: #00C4FF;
+            box-shadow: 0 4px 16px rgba(0, 196, 255, 0.2);
+            animation: badgePulse 3s ease-in-out infinite;
         }
 
         @keyframes badgePulse {
             0%, 100% { 
-                box-shadow: 0 0 20px rgba(46, 169, 223, 0.3);
+                transform: scale(1); 
+                box-shadow: 0 4px 16px rgba(0, 196, 255, 0.2); 
             }
             50% { 
-                box-shadow: 0 0 40px rgba(46, 169, 223, 0.6);
+                transform: scale(1.03); 
+                box-shadow: 0 6px 24px rgba(0, 196, 255, 0.35); 
             }
         }
 
-        /* Cards Grid - Fixed Layout */
         .cards-grid {
             display: grid;
             grid-template-columns: repeat(2, minmax(350px, 550px));
@@ -167,14 +177,14 @@
             max-width: 1200px;
             width: 100%;
             animation: fadeInUp 1s ease-out 0.3s both;
-            margin-bottom: 30px;
+            margin-bottom: 40px;
             justify-content: center;
         }
 
         @keyframes fadeInUp {
             from {
                 opacity: 0;
-                transform: translateY(30px);
+                transform: translateY(40px);
             }
             to {
                 opacity: 1;
@@ -183,11 +193,11 @@
         }
 
         .feature-card {
-            background: rgba(22, 27, 34, 0.85);
+            background: rgba(255, 255, 255, 0.75);
             backdrop-filter: blur(20px);
-            border: 2px solid rgba(46, 169, 223, 0.2);
-            border-radius: 30px;
-            padding: 50px;
+            border: 2px solid rgba(0, 196, 255, 0.2);
+            border-radius: 32px;
+            padding: 50px 45px;
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
             position: relative;
@@ -195,7 +205,7 @@
             text-decoration: none;
             color: inherit;
             display: block;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 20px 60px rgba(0, 196, 255, 0.1);
         }
 
         .feature-card::before {
@@ -205,7 +215,7 @@
             left: -100%;
             width: 100%;
             height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(46, 169, 223, 0.1), transparent);
+            background: linear-gradient(90deg, transparent, rgba(0, 196, 255, 0.08), transparent);
             transition: left 0.6s;
         }
 
@@ -213,30 +223,53 @@
             left: 100%;
         }
 
+        .feature-card::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(135deg, #E8C547, #FFD700, #F2C265);
+            border-radius: 32px;
+            opacity: 0;
+            z-index: -1;
+            transition: opacity 0.4s;
+        }
+
+        .feature-card:hover::after {
+            opacity: 0.3;
+        }
+
         .feature-card:hover {
             transform: translateY(-15px);
-            border-color: rgba(46, 169, 223, 0.5);
-            box-shadow: 0 30px 80px rgba(46, 169, 223, 0.3);
+            border-color: rgba(0, 196, 255, 0.5);
+            box-shadow: 0 30px 80px rgba(0, 196, 255, 0.25);
+            background: rgba(255, 255, 255, 0.9);
         }
 
         .card-icon {
             font-size: 4.5em;
             margin-bottom: 25px;
             display: block;
-            filter: drop-shadow(0 10px 20px rgba(46, 169, 223, 0.3));
+            filter: drop-shadow(0 10px 20px rgba(0, 196, 255, 0.3));
         }
 
         .card-title {
+            font-family: 'Orbitron', sans-serif;
             font-size: 2.2em;
             font-weight: 800;
-            margin-bottom: 15px;
-            color: #2ea9df;
+            margin-bottom: 18px;
+            background: linear-gradient(135deg, #00C4FF, #1E1E2F);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .card-description {
-            font-size: 1.2em;
-            color: rgba(255, 255, 255, 0.8);
-            line-height: 1.8;
+            font-size: 1.1em;
+            color: rgba(30, 30, 47, 0.75);
+            line-height: 1.7;
             margin-bottom: 25px;
         }
 
@@ -247,47 +280,66 @@
 
         .card-features li {
             padding: 10px 0;
-            color: rgba(255, 255, 255, 0.85);
+            color: rgba(30, 30, 47, 0.8);
             font-size: 1.05em;
             position: relative;
-            padding-left: 30px;
+            padding-left: 35px;
         }
 
         .card-features li::before {
             content: '✓';
             position: absolute;
             left: 0;
-            color: #2ea9df;
+            color: #00C4FF;
             font-weight: bold;
-            font-size: 1.3em;
+            font-size: 1.4em;
         }
 
         .card-button {
-            background: linear-gradient(135deg, #2ea9df, #1e6091);
+            background: linear-gradient(135deg, #00C4FF, #82FFD2);
             color: white;
             border: none;
             padding: 18px 40px;
-            border-radius: 15px;
+            border-radius: 16px;
             font-size: 1.1em;
             font-weight: 700;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 10px 30px rgba(46, 169, 223, 0.3);
+            box-shadow: 0 10px 30px rgba(0, 196, 255, 0.3);
             display: inline-block;
-            font-family: 'EB Garamond', serif;
+            font-family: 'Inter', sans-serif;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .card-button:hover::before {
+            width: 300px;
+            height: 300px;
         }
 
         .card-button:hover {
             transform: translateY(-3px);
-            box-shadow: 0 15px 40px rgba(46, 169, 223, 0.5);
+            box-shadow: 0 15px 40px rgba(0, 196, 255, 0.5);
         }
 
-        /* Team Card - Full Width Below */
         .team-card {
             grid-column: 1 / -1;
             max-width: 600px;
             margin: 0 auto;
-            padding: 35px;
+            padding: 40px;
             animation: fadeIn 1s ease-out 0.6s both;
         }
 
@@ -297,49 +349,141 @@
         }
 
         .team-card .card-title {
-            font-size: 1.6em;
+            font-size: 1.8em;
         }
 
         .team-section {
-            margin: 15px 0;
+            margin: 20px 0;
         }
 
         .team-section h4 {
-            color: #2ea9df;
-            font-size: 1.1em;
-            margin-bottom: 10px;
+            color: #00C4FF;
+            font-size: 1.15em;
+            margin-bottom: 12px;
             font-weight: 700;
         }
 
         .team-members {
-            color: rgba(255, 255, 255, 0.7);
+            color: rgba(30, 30, 47, 0.7);
             font-size: 0.95em;
             line-height: 1.8;
         }
 
-        /* Footer */
         .footer {
             text-align: center;
-            color: rgba(255, 255, 255, 0.5);
-            font-size: 1em;
-            margin-top: 30px;
+            color: rgba(30, 30, 47, 0.6);
+            font-size: 0.95em;
+            margin-top: 40px;
             animation: fadeIn 1s ease-out 0.8s both;
         }
 
         .footer-credits {
-            margin-top: 15px;
+            margin-top: 18px;
             font-size: 0.9em;
-            color: rgba(255, 255, 255, 0.4);
+            color: rgba(30, 30, 47, 0.5);
             line-height: 1.6;
         }
 
         .parama-credit {
-            color: #2ea9df;
+            color: #E8C547;
             font-weight: 700;
-            margin-top: 10px;
+            margin-top: 12px;
         }
 
-        /* Responsive */
+        /* Sistema de Tooltips */
+        .custom-tooltip {
+            position: fixed;
+            z-index: 10000;
+            opacity: 0;
+            transform: translateY(-5px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+        }
+
+        .custom-tooltip.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .custom-tooltip.locked {
+            pointer-events: auto;
+        }
+
+        .tooltip-content {
+            background: linear-gradient(135deg, rgba(232, 197, 71, 0.98), rgba(255, 215, 0, 0.98));
+            color: #1E1E2F;
+            padding: 12px 18px;
+            border-radius: 12px;
+            font-size: 0.9em;
+            font-weight: 600;
+            box-shadow: 0 8px 32px rgba(232, 197, 71, 0.5), 0 0 0 1px rgba(255, 215, 0, 0.3);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            max-width: 280px;
+            font-family: 'Inter', sans-serif;
+            line-height: 1.4;
+        }
+
+        .custom-tooltip.mobile .tooltip-content {
+            padding: 14px 20px;
+            font-size: 0.95em;
+        }
+
+        .tooltip-icon {
+            font-size: 1.3em;
+            flex-shrink: 0;
+        }
+
+        .tooltip-text {
+            flex: 1;
+        }
+
+        .tooltip-close {
+            background: rgba(30, 30, 47, 0.15);
+            border: none;
+            color: #1E1E2F;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            font-size: 1.4em;
+            line-height: 1;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 8px;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .tooltip-close:hover {
+            background: rgba(30, 30, 47, 0.25);
+            transform: scale(1.1);
+        }
+
+        [data-tooltip] {
+            position: relative;
+        }
+
+        [data-tooltip]::after {
+            content: '';
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 6px;
+            height: 6px;
+            background: #FFD700;
+            border-radius: 50%;
+            opacity: 0.5;
+            animation: tooltipPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes tooltipPulse {
+            0%, 100% { opacity: 0.5; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); }
+        }
+
         @media (max-width: 1024px) {
             .cards-grid {
                 grid-template-columns: 1fr;
@@ -348,20 +492,25 @@
         }
 
         @media (max-width: 768px) {
-            .feature-card {
+            .feature-card, .team-card {
                 padding: 35px 30px;
             }
 
-            .team-card {
-                padding: 30px 25px;
+            .custom-tooltip {
+                max-width: calc(100vw - 40px);
+            }
+
+            .tooltip-content {
+                font-size: 0.95em;
+                padding: 14px 20px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="bg-image"></div>
+    <div class="bg-particles"></div>
     
-    <div class="lang-selector">
+    <div class="lang-selector" data-tooltip="Cambia el idioma de la aplicación">
         <select id="lang-select" onchange="changeLanguage(this.value)">
             <option value="en">English</option>
             <option value="es">Español</option>
@@ -370,7 +519,7 @@
     
     <div class="container">
         <div class="logo-section">
-            <h1 class="logo">DropCheck</h1>
+            <h1 class="logo">DROPCHECK</h1>
             <p class="tagline" data-en="Weather Intelligence Platform" data-es="Plataforma de Inteligencia Meteorológica">Weather Intelligence Platform</p>
             <p class="subtitle" data-en="Real NASA Data • Advanced Analysis • Smart Forecasting" data-es="Datos Reales de NASA • Análisis Avanzado • Pronóstico Inteligente">Real NASA Data • Advanced Analysis • Smart Forecasting</p>
             <span class="nasa-badge">NASA Space Apps Challenge 2025</span>
@@ -378,7 +527,7 @@
 
         <div class="cards-grid">
             <!-- Consumer Card -->
-            <a href="consumer.html" class="feature-card">
+            <a href="consumer.html" class="feature-card" tabindex="0" data-tooltip="Consulta pronósticos en tiempo real para cualquier ciudad del mundo con datos actualizados cada 15 minutos">
                 <span class="card-icon">🌤</span>
                 <h2 class="card-title" data-en="Quick Forecast" data-es="Pronóstico Rápido">Quick Forecast</h2>
                 <p class="card-description" data-en="Real-time weather forecasts powered by Open-Meteo API" data-es="Pronósticos meteorológicos en tiempo real impulsados por Open-Meteo API">
@@ -394,7 +543,7 @@
             </a>
 
             <!-- Scientific Card -->
-            <a href="scientific.html" class="feature-card">
+            <a href="scientific.html" class="feature-card" tabindex="0" data-tooltip="Análisis científico profundo con más de 20 años de datos históricos de NASA POWER para estudios climáticos avanzados">
                 <span class="card-icon">📊</span>
                 <h2 class="card-title" data-en="Scientific Analysis" data-es="Análisis Científico">Scientific Analysis</h2>
                 <p class="card-description" data-en="Advanced climate analysis with 20+ years of NASA POWER data" data-es="Análisis climático avanzado con más de 20 años de datos de NASA POWER">
@@ -411,15 +560,15 @@
             </a>
 
             <!-- Team Info Card -->
-            <div class="feature-card team-card">
+            <div class="feature-card team-card" tabindex="0" data-tooltip="Conoce al equipo PARAMÁ Legends, ganadores del segundo lugar nacional en 2024 y competidores 2025">
                 <span class="card-icon">👥</span>
                 <h2 class="card-title" data-en="Our Team" data-es="Nuestro Equipo">Our Team</h2>
                 <p class="card-description" data-en="Building weather intelligence solutions year after year" data-es="Construyendo soluciones de inteligencia meteorológica año tras año">
-                    innovating through technology year after year
+                    Innovating through technology year after year
                 </p>
                 
                 <div class="team-section">
-                    <h4>2024 Team Second Place Winners at the National Level</h4>
+                    <h4>2024 Team - Second Place Winners at National Level</h4>
                     <div class="team-members">
                         Carlos • Shirley • Maria Belen<br>
                         Nieves • Sonia • Cambara
@@ -459,7 +608,6 @@
             localStorage.setItem('selectedLanguage', lang);
         }
 
-        // Load saved language
         document.addEventListener('DOMContentLoaded', () => {
             const savedLang = localStorage.getItem('selectedLanguage') || 'en';
             document.getElementById('lang-select').value = savedLang;
@@ -467,6 +615,125 @@
                 changeLanguage(savedLang);
             }
         });
+
+        // Sistema de Tooltips
+        class TooltipSystem {
+            constructor() {
+                this.activeTooltip = null;
+                this.pressTimer = null;
+                this.init();
+            }
+
+            init() {
+                document.addEventListener('DOMContentLoaded', () => {
+                    this.attachTooltips();
+                });
+            }
+
+            attachTooltips() {
+                const elements = document.querySelectorAll('[data-tooltip]');
+                
+                elements.forEach(el => {
+                    el.addEventListener('mouseenter', (e) => this.showTooltip(el, e));
+                    el.addEventListener('mouseleave', () => this.hideTooltip());
+                    
+                    el.addEventListener('touchstart', (e) => {
+                        this.pressTimer = setTimeout(() => {
+                            this.showTooltip(el, e, true);
+                            navigator.vibrate && navigator.vibrate(50);
+                        }, 500);
+                    });
+                    
+                    el.addEventListener('touchend', () => {
+                        clearTimeout(this.pressTimer);
+                    });
+                    
+                    el.addEventListener('touchmove', () => {
+                        clearTimeout(this.pressTimer);
+                    });
+
+                    el.addEventListener('mousedown', () => {
+                        this.pressTimer = setTimeout(() => {
+                            this.lockTooltip(el);
+                        }, 800);
+                    });
+
+                    el.addEventListener('mouseup', () => {
+                        clearTimeout(this.pressTimer);
+                    });
+                });
+
+                document.addEventListener('click', (e) => {
+                    if (this.activeTooltip && !e.target.closest('[data-tooltip]')) {
+                        this.hideTooltip();
+                    }
+                });
+            }
+
+            showTooltip(element, event, isMobile = false) {
+                const text = element.getAttribute('data-tooltip');
+                if (!text) return;
+
+                this.hideTooltip();
+
+                const tooltip = document.createElement('div');
+                tooltip.className = 'custom-tooltip' + (isMobile ? ' mobile' : '');
+                tooltip.innerHTML = `
+                    <div class="tooltip-content">
+                        <span class="tooltip-icon">ℹ️</span>
+                        <span class="tooltip-text">${text}</span>
+                    </div>
+                `;
+
+                document.body.appendChild(tooltip);
+                this.activeTooltip = tooltip;
+
+                const rect = element.getBoundingClientRect();
+                const tooltipRect = tooltip.getBoundingClientRect();
+                
+                let top = rect.bottom + 10;
+                let left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
+
+                if (left + tooltipRect.width > window.innerWidth - 20) {
+                    left = window.innerWidth - tooltipRect.width - 20;
+                }
+                if (left < 20) left = 20;
+                
+                if (top + tooltipRect.height > window.innerHeight - 20) {
+                    top = rect.top - tooltipRect.height - 10;
+                }
+
+                tooltip.style.top = top + 'px';
+                tooltip.style.left = left + 'px';
+                
+                setTimeout(() => tooltip.classList.add('show'), 10);
+            }
+
+            lockTooltip(element) {
+                if (this.activeTooltip) {
+                    this.activeTooltip.classList.add('locked');
+                    const closeBtn = document.createElement('button');
+                    closeBtn.className = 'tooltip-close';
+                    closeBtn.innerHTML = '×';
+                    closeBtn.onclick = () => this.hideTooltip();
+                    this.activeTooltip.querySelector('.tooltip-content').appendChild(closeBtn);
+                }
+            }
+
+            hideTooltip() {
+                if (this.activeTooltip) {
+                    this.activeTooltip.classList.remove('show');
+                    setTimeout(() => {
+                        if (this.activeTooltip && this.activeTooltip.parentNode) {
+                            this.activeTooltip.parentNode.removeChild(this.activeTooltip);
+                        }
+                        this.activeTooltip = null;
+                    }, 200);
+                }
+            }
+        }
+
+        new TooltipSystem();
     </script>
 </body>
 </html>
