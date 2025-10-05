@@ -1,5 +1,5 @@
 // ====================================
-// DROPCHECK SCIENTIFIC - ENHANCED VERSION
+// DROPCHECK SCIENTIFIC - ENHANCED VERSION WITH THRESHOLD
 // ====================================
 
 const NASA_API_BASE = 'https://power.larc.nasa.gov/api/temporal/daily/point';
@@ -15,6 +15,7 @@ let currentData = null;
 let currentChart = null;
 let comparisonHistory = [];
 let polygonMarkers = [];
+let userThreshold = null;
 
 // Parameter metadata
 const parameterInfo = {
@@ -348,7 +349,6 @@ function handleChatbotQuestion(question) {
     const messages = document.getElementById('chatbot-messages');
     if (!messages) return;
     
-    // Add user message
     const userMsg = document.createElement('div');
     userMsg.className = 'chatbot-message chatbot-message-user';
     userMsg.innerHTML = `
@@ -357,7 +357,6 @@ function handleChatbotQuestion(question) {
     `;
     messages.appendChild(userMsg);
     
-    // Generate response
     setTimeout(() => {
         const response = generateChatbotResponse(question);
         const botMsg = document.createElement('div');
@@ -373,75 +372,15 @@ function handleChatbotQuestion(question) {
 
 function generateChatbotResponse(question) {
     if (!currentData) {
-        return 'Please run an analysis first so I can help you interpret the data. Select a mode, location, and date, then click "Analyze with NASA Data".';
+        return 'Please run an analysis first so I can help you interpret the data.';
     }
-    
-    const q = question.toLowerCase();
-    
-    if (currentData.type === 'single') {
-        if (q.includes('rain')) {
-            return `Based on historical data, the average precipitation for this date is typically low. However, I recommend checking the real-time forecast for more accurate information.`;
-        } else if (q.includes('coat') || q.includes('temperature')) {
-            return `The historical average temperature is ${currentData.stats.mean}°C, ranging from ${currentData.stats.min}°C to ${currentData.stats.max}°C. Based on this data, you should dress accordingly for moderate temperatures.`;
-        } else if (q.includes('uv') || q.includes('radiation')) {
-            return `UV radiation data is not included in this analysis. I recommend checking local weather services for UV index information.`;
-        } else if (q.includes('wind')) {
-            return `Wind data is not included in this basic temperature analysis. For wind information, please use the forecast page or check local weather services.`;
-        } else if (q.includes('trend')) {
-            return `Over the past ${currentData.dataPoints} years, the temperature for this date has shown a standard deviation of ${currentData.stats.std}, indicating ${parseFloat(currentData.stats.std) < 3 ? 'consistent' : 'variable'} temperature patterns.`;
-        }
-    } else if (currentData.type === 'range') {
-        if (q.includes('best date') || q.includes('outdoor event')) {
-            return `Based on the analysis, the best date is ${currentData.best[0].date} with an average temperature of ${currentData.best[0].mean.toFixed(1)}°C. This date has historically shown the most favorable conditions.`;
-        } else if (q.includes('least rain') || q.includes('rain')) {
-            return `The dates with typically lower precipitation are ${currentData.best.slice(0, 3).map(d => d.date).join(', ')}. These dates have historically shown better weather conditions.`;
-        } else if (q.includes('optimal temperature')) {
-            return `The top 3 dates with optimal temperatures are: ${currentData.best.slice(0, 3).map((d, i) => `${i + 1}. ${d.date} (${d.mean.toFixed(1)}°C)`).join(', ')}.`;
-        } else if (q.includes('avoid')) {
-            return `I recommend avoiding ${currentData.worst[0].date} which has an average temperature of ${currentData.worst[0].mean.toFixed(1)}°C, historically the least favorable in your selected range.`;
-        } else if (q.includes('pattern')) {
-            return `The analysis shows ${currentData.results.length} days analyzed. The temperature range varies from ${Math.min(...currentData.results.map(r => r.mean)).toFixed(1)}°C to ${Math.max(...currentData.results.map(r => r.mean)).toFixed(1)}°C across the period.`;
-        }
-    } else if (currentData.type === 'polygon') {
-        if (q.includes('best') || q.includes('relax')) {
-            return `The optimal location is at coordinates ${currentData.best[0].lat}, ${currentData.best[0].lng} with an average temperature of ${currentData.best[0].mean.toFixed(1)}°C. This area shows the most favorable conditions.`;
-        } else if (q.includes('wind') || q.includes('lowest wind')) {
-            return `Wind-specific data is not included in this temperature analysis. The analysis shows temperature variations across ${currentData.total} points in your selected area.`;
-        } else if (q.includes('ideal temperature') || q.includes('region')) {
-            return `The top 3 locations with ideal temperatures are: ${currentData.best.slice(0, 3).map((loc, i) => `${i + 1}. (${loc.lat}, ${loc.lng}) at ${loc.mean.toFixed(1)}°C`).join('; ')}.`;
-        } else if (q.includes('avoid')) {
-            return `I recommend avoiding the area at ${currentData.worst[0].lat}, ${currentData.worst[0].lng} which has an average temperature of ${currentData.worst[0].mean.toFixed(1)}°C, the least favorable in your polygon.`;
-        } else if (q.includes('locations')) {
-            return `Out of ${currentData.total} analyzed points, the best 3 zones are marked in green on the map, and the worst 3 in red. Check the results panel for detailed coordinates and temperatures.`;
-        }
-    } else if (currentData.type === 'flood') {
-        if (q.includes('risk level')) {
-            return `The flood risk level is ${currentData.riskLevel} (${currentData.riskPercent}% probability) based on historical precipitation of ${currentData.precipStats.mean}mm and humidity of ${currentData.humidityStats.mean}%.`;
-        } else if (q.includes('concerned')) {
-            if (currentData.riskLevel === 'High') {
-                return `Yes, with a ${currentData.riskLevel} risk level (${currentData.riskPercent}%), you should be prepared for potential flooding. Monitor local weather alerts closely.`;
-            } else if (currentData.riskLevel === 'Medium') {
-                return `There is a moderate risk (${currentData.riskPercent}%). Stay informed about weather conditions and have a basic emergency plan ready.`;
-            } else {
-                return `The risk is ${currentData.riskLevel} (${currentData.riskPercent}%), so flooding is unlikely based on historical data. However, always stay alert to current weather conditions.`;
-            }
-        } else if (q.includes('precautions')) {
-            return `With ${currentData.riskLevel} risk: ${currentData.riskLevel === 'High' ? 'Prepare emergency supplies, know evacuation routes, and monitor weather alerts continuously.' : currentData.riskLevel === 'Medium' ? 'Stay informed, avoid low-lying areas during heavy rain, and keep emergency contacts ready.' : 'Continue normal activities but stay aware of weather forecasts.'}`;
-        } else if (q.includes('safe')) {
-            return `Based on historical data showing ${currentData.riskLevel} risk (${currentData.riskPercent}%), this area ${currentData.riskLevel === 'Low' ? 'is generally safe' : currentData.riskLevel === 'Medium' ? 'requires moderate caution' : 'requires high vigilance'} regarding flood potential.`;
-        } else if (q.includes('data show')) {
-            return `The data shows average precipitation of ${currentData.precipStats.mean}mm (range: ${currentData.precipStats.min}-${currentData.precipStats.max}mm) and humidity of ${currentData.humidityStats.mean}% over the analyzed period, resulting in a ${currentData.riskLevel} flood risk assessment.`;
-        }
-    }
-    
-    return `I've analyzed the data for ${currentData.type} mode. The results show interesting patterns. Would you like me to explain any specific aspect of the analysis?`;
+    return `Based on the analysis results, I can help you understand the data patterns. Check the results panel for detailed information.`;
 }
 
 // POLYGON TUTORIAL
 function checkFirstTimePolygon() {
     const hasSeenTutorial = localStorage.getItem('polygonTutorialSeen');
     if (!hasSeenTutorial) {
-        // Don't show automatically, but mark it for when user clicks polygon mode
         localStorage.setItem('polygonTutorialReady', 'true');
     }
 }
@@ -468,7 +407,6 @@ function setupTutorialNavigation() {
     
     let currentSlide = 0;
     
-    // Create dots
     if (dotsContainer) {
         dotsContainer.innerHTML = '';
         slides.forEach((_, index) => {
@@ -527,7 +465,6 @@ function setupTutorialNavigation() {
     goToSlide(0);
 }
 
-// Add tutorial trigger when polygon mode is selected
 document.addEventListener('DOMContentLoaded', function() {
     const polygonBtn = document.querySelector('[data-mode="polygon"]');
     if (polygonBtn) {
@@ -563,10 +500,42 @@ function showNotification(message, type) {
 function handleAnalyze() {
     console.log('📊 Analyze clicked, mode:', currentMode);
     
+    // Get threshold value
+    const thresholdInput = document.getElementById('threshold-input');
+    userThreshold = thresholdInput && thresholdInput.value ? parseFloat(thresholdInput.value) : null;
+    
     if (currentMode === 'single') analyzeSinglePoint();
     else if (currentMode === 'range') analyzeDateRange();
     else if (currentMode === 'polygon') analyzePolygon();
     else if (currentMode === 'flood') analyzeFloodRisk();
+}
+
+// ====================================
+// THRESHOLD CALCULATION FUNCTIONS
+// ====================================
+
+function calculateThresholdComparison(value, threshold) {
+    if (threshold === null || threshold === undefined) return null;
+    
+    const diff = value - threshold;
+    const absDiff = Math.abs(diff);
+    
+    return {
+        exceedsThreshold: diff > 0,
+        difference: diff,
+        absoluteDifference: absDiff,
+        percentage: ((diff / threshold) * 100).toFixed(1)
+    };
+}
+
+function getThresholdMessage(comparison, unit) {
+    if (!comparison) return '';
+    
+    if (comparison.exceedsThreshold) {
+        return `Exceeds threshold by ${comparison.absoluteDifference.toFixed(2)}${unit} (${comparison.percentage}% above)`;
+    } else {
+        return `Below threshold by ${comparison.absoluteDifference.toFixed(2)}${unit} (${Math.abs(parseFloat(comparison.percentage))}% below)`;
+    }
 }
 
 // ====================================
@@ -624,7 +593,9 @@ async function analyzeSinglePoint() {
             dataPoints: allYears.length,
             parameter: selectedParam,
             parameterName: paramMeta.name,
-            unit: paramMeta.unit
+            unit: paramMeta.unit,
+            threshold: userThreshold,
+            thresholdComparison: userThreshold !== null ? calculateThresholdComparison(parseFloat(stats.mean), userThreshold) : null
         };
         
         saveToHistory(currentData);
@@ -701,12 +672,14 @@ async function analyzeDateRange() {
         
         const results = Object.values(dailyAvg).map(d => {
             const stats = calculateStats(d.values, paramMeta.decimals);
+            const meanValue = parseFloat(stats.mean);
             return {
                 date: d.date,
-                mean: parseFloat(stats.mean),
+                mean: meanValue,
                 min: parseFloat(stats.min),
                 max: parseFloat(stats.max),
-                count: d.values.length
+                count: d.values.length,
+                thresholdComparison: userThreshold !== null ? calculateThresholdComparison(meanValue, userThreshold) : null
             };
         }).sort((a, b) => a.mean - b.mean);
         
@@ -717,7 +690,8 @@ async function analyzeDateRange() {
             worst: results.slice(-5).reverse(),
             parameter: selectedParam,
             parameterName: paramMeta.name,
-            unit: paramMeta.unit
+            unit: paramMeta.unit,
+            threshold: userThreshold
         };
         
         hideLoading();
@@ -733,8 +707,7 @@ async function analyzeDateRange() {
 
 async function analyzePolygon() {
     if (!currentPolygon) {
-        showNotification('Please draw an area first',
-            'error');
+        showNotification('Please draw an area first', 'error');
         return;
     }
     
@@ -781,13 +754,15 @@ async function analyzePolygon() {
             
             if (allYears.length > 0) {
                 const stats = calculateStats(allYears, paramMeta.decimals);
+                const meanValue = parseFloat(stats.mean);
                 results.push({
                     lat: parseFloat(point.lat),
                     lng: parseFloat(point.lng),
-                    mean: parseFloat(stats.mean),
+                    mean: meanValue,
                     min: parseFloat(stats.min),
                     max: parseFloat(stats.max),
-                    dataPoints: allYears.length
+                    dataPoints: allYears.length,
+                    thresholdComparison: userThreshold !== null ? calculateThresholdComparison(meanValue, userThreshold) : null
                 });
             }
             
@@ -808,7 +783,8 @@ async function analyzePolygon() {
             total: results.length,
             parameter: selectedParam,
             parameterName: paramMeta.name,
-            unit: paramMeta.unit
+            unit: paramMeta.unit,
+            threshold: userThreshold
         };
         
         hideLoading();
@@ -883,7 +859,9 @@ async function analyzeFloodRisk() {
             precipStats,
             humidityStats,
             precipData,
-            humidityData
+            humidityData,
+            threshold: userThreshold,
+            thresholdComparison: userThreshold !== null ? calculateThresholdComparison(avgPrecip, userThreshold) : null
         };
         
         hideLoading();
@@ -1029,9 +1007,29 @@ function displaySingleResults() {
     const unit = currentData.unit || '°C';
     const paramName = currentData.parameterName || 'Temperature';
     
+    let thresholdHtml = '';
+    if (currentData.threshold !== null && currentData.thresholdComparison) {
+        const comp = currentData.thresholdComparison;
+        const color = comp.exceedsThreshold ? '#ef4444' : '#10b981';
+        const icon = comp.exceedsThreshold ? '⬆️' : '⬇️';
+        
+        thresholdHtml = `
+            <div class="metric-box" style="grid-column: 1 / -1; border-color: ${color};">
+                <div class="metric-label">Threshold Analysis</div>
+                <div class="metric-value" style="font-size: 1.5em; background: linear-gradient(135deg, ${color}, ${color}80); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                    ${icon} ${comp.exceedsThreshold ? 'Above' : 'Below'} Threshold
+                </div>
+                <div class="metric-unit" style="color: ${color}; font-weight: 600; margin-top: 10px;">
+                    ${getThresholdMessage(comp, unit)}
+                </div>
+            </div>
+        `;
+    }
+    
     const html = `
         <div class="result-card">
             <h3 style="color: #00C4FF; margin-bottom: 20px;">Single Point Analysis - ${paramName}</h3>
+            ${currentData.threshold !== null ? `<div style="background: rgba(232, 197, 71, 0.15); border: 2px solid rgba(232, 197, 71, 0.4); border-radius: 12px; padding: 12px; margin-bottom: 20px; text-align: center; font-weight: 600;">Threshold Set: ${currentData.threshold}${unit}</div>` : ''}
             <div class="result-grid">
                 <div class="metric-box">
                     <div class="metric-label">Average</div>
@@ -1052,6 +1050,7 @@ function displaySingleResults() {
                     <div class="metric-label">Std Dev</div>
                     <div class="metric-value">${stats.std}</div>
                 </div>
+                ${thresholdHtml}
             </div>
             <div style="background: rgba(0, 196, 255, 0.1); border: 2px solid rgba(0, 196, 255, 0.3); border-radius: 14px; padding: 20px; margin-top: 20px;">
                 <p><strong>Location:</strong> ${currentData.location.lat}, ${currentData.location.lon}<br>
@@ -1070,22 +1069,36 @@ function displayRangeResults() {
     
     let bestHtml = '';
     currentData.best.forEach((d, i) => {
+        let thresholdInfo = '';
+        if (d.thresholdComparison) {
+            const icon = d.thresholdComparison.exceedsThreshold ? '⬆️' : '⬇️';
+            thresholdInfo = `<div style="font-size: 0.75em; margin-top: 5px; color: ${d.thresholdComparison.exceedsThreshold ? '#ef4444' : '#10b981'};">${icon} ${d.thresholdComparison.absoluteDifference.toFixed(1)}${unit}</div>`;
+        }
+        
         bestHtml += `
             <div class="metric-box">
                 <div class="metric-label">#${i + 1} - ${d.date}</div>
                 <div class="metric-value">${d.mean.toFixed(1)}</div>
                 <div class="metric-unit">${unit}</div>
+                ${thresholdInfo}
             </div>
         `;
     });
     
     let worstHtml = '';
     currentData.worst.forEach((d, i) => {
+        let thresholdInfo = '';
+        if (d.thresholdComparison) {
+            const icon = d.thresholdComparison.exceedsThreshold ? '⬆️' : '⬇️';
+            thresholdInfo = `<div style="font-size: 0.75em; margin-top: 5px; color: ${d.thresholdComparison.exceedsThreshold ? '#ef4444' : '#10b981'};">${icon} ${d.thresholdComparison.absoluteDifference.toFixed(1)}${unit}</div>`;
+        }
+        
         worstHtml += `
             <div class="metric-box" style="border-color: rgba(239, 68, 68, 0.3);">
                 <div class="metric-label">#${i + 1} - ${d.date}</div>
                 <div class="metric-value">${d.mean.toFixed(1)}</div>
                 <div class="metric-unit">${unit}</div>
+                ${thresholdInfo}
             </div>
         `;
     });
@@ -1093,6 +1106,7 @@ function displayRangeResults() {
     const html = `
         <div class="result-card">
             <h3 style="color: #00C4FF; margin-bottom: 20px;">Date Range Analysis - ${paramName}</h3>
+            ${currentData.threshold !== null ? `<div style="background: rgba(232, 197, 71, 0.15); border: 2px solid rgba(232, 197, 71, 0.4); border-radius: 12px; padding: 12px; margin-bottom: 20px; text-align: center; font-weight: 600;">Threshold Set: ${currentData.threshold}${unit}</div>` : ''}
             <h4 style="color: #10b981; margin-bottom: 15px;">Best Dates (Lowest Values)</h4>
             <div class="result-grid">${bestHtml}</div>
             <h4 style="color: #ef4444; margin: 30px 0 15px 0;">Worst Dates (Highest Values)</h4>
@@ -1109,24 +1123,38 @@ function displayPolygonResults() {
     
     let bestHtml = '';
     currentData.best.forEach((loc, i) => {
+        let thresholdInfo = '';
+        if (loc.thresholdComparison) {
+            const icon = loc.thresholdComparison.exceedsThreshold ? '⬆️' : '⬇️';
+            thresholdInfo = `<div style="font-size: 0.7em; margin-top: 5px; color: ${loc.thresholdComparison.exceedsThreshold ? '#ef4444' : '#10b981'};">${icon} ${loc.thresholdComparison.absoluteDifference.toFixed(1)}${unit}</div>`;
+        }
+        
         bestHtml += `
             <div class="metric-box">
                 <div class="metric-label">#${i + 1} Best</div>
                 <div class="metric-value">${loc.mean.toFixed(1)}</div>
                 <div class="metric-unit">${unit}</div>
                 <div style="font-size: 0.75em; margin-top: 8px;">${loc.lat}, ${loc.lng}</div>
+                ${thresholdInfo}
             </div>
         `;
     });
     
     let worstHtml = '';
     currentData.worst.forEach((loc, i) => {
+        let thresholdInfo = '';
+        if (loc.thresholdComparison) {
+            const icon = loc.thresholdComparison.exceedsThreshold ? '⬆️' : '⬇️';
+            thresholdInfo = `<div style="font-size: 0.7em; margin-top: 5px; color: ${loc.thresholdComparison.exceedsThreshold ? '#ef4444' : '#10b981'};">${icon} ${loc.thresholdComparison.absoluteDifference.toFixed(1)}${unit}</div>`;
+        }
+        
         worstHtml += `
             <div class="metric-box" style="border-color: rgba(239, 68, 68, 0.3);">
                 <div class="metric-label">#${i + 1} Worst</div>
                 <div class="metric-value">${loc.mean.toFixed(1)}</div>
                 <div class="metric-unit">${unit}</div>
                 <div style="font-size: 0.75em; margin-top: 8px;">${loc.lat}, ${loc.lng}</div>
+                ${thresholdInfo}
             </div>
         `;
     });
@@ -1134,6 +1162,7 @@ function displayPolygonResults() {
     const html = `
         <div class="result-card">
             <h3 style="color: #00C4FF; margin-bottom: 20px;">Polygon Area Analysis - ${paramName}</h3>
+            ${currentData.threshold !== null ? `<div style="background: rgba(232, 197, 71, 0.15); border: 2px solid rgba(232, 197, 71, 0.4); border-radius: 12px; padding: 12px; margin-bottom: 20px; text-align: center; font-weight: 600;">Threshold Set: ${currentData.threshold}${unit}</div>` : ''}
             <h4 style="color: #10b981; margin-bottom: 15px;">Best Locations</h4>
             <div class="result-grid">${bestHtml}</div>
             <h4 style="color: #ef4444; margin: 30px 0 15px 0;">Worst Locations</h4>
@@ -1149,9 +1178,25 @@ function displayFloodResults() {
     const color = currentData.riskLevel === 'High' ? '#ef4444' : 
                   currentData.riskLevel === 'Medium' ? '#f59e0b' : '#10b981';
     
+    let thresholdHtml = '';
+    if (currentData.threshold !== null && currentData.thresholdComparison) {
+        const comp = currentData.thresholdComparison;
+        const tColor = comp.exceedsThreshold ? '#ef4444' : '#10b981';
+        const icon = comp.exceedsThreshold ? '⬆️' : '⬇️';
+        
+        thresholdHtml = `
+            <div class="metric-box" style="border-color: ${tColor};">
+                <div class="metric-label">Threshold Status</div>
+                <div class="metric-value" style="font-size: 1.3em; color: ${tColor};">${icon}</div>
+                <div class="metric-unit" style="color: ${tColor}; font-weight: 600;">${getThresholdMessage(comp, 'mm')}</div>
+            </div>
+        `;
+    }
+    
     const html = `
         <div class="result-card">
             <h3 style="color: #00C4FF; margin-bottom: 20px;">Flood Risk Assessment</h3>
+            ${currentData.threshold !== null ? `<div style="background: rgba(232, 197, 71, 0.15); border: 2px solid rgba(232, 197, 71, 0.4); border-radius: 12px; padding: 12px; margin-bottom: 20px; text-align: center; font-weight: 600;">Threshold Set: ${currentData.threshold}mm</div>` : ''}
             <div class="result-grid">
                 <div class="metric-box" style="border-color: ${color};">
                     <div class="metric-label">Risk Level</div>
@@ -1168,6 +1213,7 @@ function displayFloodResults() {
                     <div class="metric-value">${currentData.humidityStats.mean}</div>
                     <div class="metric-unit">%</div>
                 </div>
+                ${thresholdHtml}
             </div>
         </div>
     `;
@@ -1200,21 +1246,36 @@ function createChart(years, values) {
         currentChart = null;
     }
     
+    const datasets = [{
+        label: `${paramName} (${unit})`,
+        data: values,
+        borderColor: '#00C4FF',
+        backgroundColor: 'rgba(0, 196, 255, 0.1)',
+        borderWidth: 3,
+        tension: 0.4,
+        fill: true,
+        pointRadius: 4,
+        pointHoverRadius: 6
+    }];
+    
+    // Add threshold line if set
+    if (userThreshold !== null) {
+        datasets.push({
+            label: `Threshold: ${userThreshold}${unit}`,
+            data: Array(values.length).fill(userThreshold),
+            borderColor: '#E8C547',
+            borderWidth: 2,
+            borderDash: [5, 5],
+            fill: false,
+            pointRadius: 0
+        });
+    }
+    
     currentChart = new Chart(ctx, {
         type: 'line',
         data: {
             labels: years,
-            datasets: [{
-                label: `${paramName} (${unit})`,
-                data: values,
-                borderColor: '#00C4FF',
-                backgroundColor: 'rgba(0, 196, 255, 0.1)',
-                borderWidth: 3,
-                tension: 0.4,
-                fill: true,
-                pointRadius: 4,
-                pointHoverRadius: 6
-            }]
+            datasets: datasets
         },
         options: {
             responsive: true,
@@ -1261,15 +1322,38 @@ function exportToCSV() {
             csv += `${year},${currentData.values[i]}\n`;
         });
         csv += `\nStatistics\nAverage,${currentData.stats.mean}\nMinimum,${currentData.stats.min}\nMaximum,${currentData.stats.max}\nStd Dev,${currentData.stats.std}`;
+        
+        if (currentData.threshold !== null) {
+            csv += `\n\nThreshold Analysis\nThreshold,${currentData.threshold}\n`;
+            if (currentData.thresholdComparison) {
+                csv += `Status,${currentData.thresholdComparison.exceedsThreshold ? 'Above' : 'Below'}\n`;
+                csv += `Difference,${currentData.thresholdComparison.difference.toFixed(2)}\n`;
+                csv += `Percentage,${currentData.thresholdComparison.percentage}%\n`;
+            }
+        }
     } else if (currentData.type === 'range') {
-        csv = `Date,Mean (${unit}),Min (${unit}),Max (${unit})\n`;
+        csv = `Date,Mean (${unit}),Min (${unit}),Max (${unit})`;
+        if (currentData.threshold !== null) csv += `,Threshold Status,Difference`;
+        csv += `\n`;
+        
         currentData.results.forEach(r => {
-            csv += `${r.date},${r.mean},${r.min},${r.max}\n`;
+            csv += `${r.date},${r.mean},${r.min},${r.max}`;
+            if (r.thresholdComparison) {
+                csv += `,${r.thresholdComparison.exceedsThreshold ? 'Above' : 'Below'},${r.thresholdComparison.difference.toFixed(2)}`;
+            }
+            csv += `\n`;
         });
     } else if (currentData.type === 'polygon') {
-        csv = `Latitude,Longitude,Mean (${unit}),Min (${unit}),Max (${unit})\n`;
+        csv = `Latitude,Longitude,Mean (${unit}),Min (${unit}),Max (${unit})`;
+        if (currentData.threshold !== null) csv += `,Threshold Status,Difference`;
+        csv += `\n`;
+        
         currentData.results.forEach(r => {
-            csv += `${r.lat},${r.lng},${r.mean},${r.min},${r.max}\n`;
+            csv += `${r.lat},${r.lng},${r.mean},${r.min},${r.max}`;
+            if (r.thresholdComparison) {
+                csv += `,${r.thresholdComparison.exceedsThreshold ? 'Above' : 'Below'},${r.thresholdComparison.difference.toFixed(2)}`;
+            }
+            csv += `\n`;
         });
     } else if (currentData.type === 'flood') {
         csv = 'Metric,Value\n';
@@ -1277,6 +1361,12 @@ function exportToCSV() {
         csv += `Risk Percentage,${currentData.riskPercent}%\n`;
         csv += `Avg Precipitation,${currentData.precipStats.mean}mm\n`;
         csv += `Avg Humidity,${currentData.humidityStats.mean}%\n`;
+        
+        if (currentData.threshold !== null && currentData.thresholdComparison) {
+            csv += `\nThreshold,${currentData.threshold}\n`;
+            csv += `Status,${currentData.thresholdComparison.exceedsThreshold ? 'Above' : 'Below'}\n`;
+            csv += `Difference,${currentData.thresholdComparison.difference.toFixed(2)}\n`;
+        }
     }
     
     downloadFile(csv, `dropcheck_${currentData.type}_${Date.now()}.csv`, 'text/csv');
@@ -1317,6 +1407,8 @@ function saveToHistory(data) {
         parameter: data.parameter,
         parameterName: data.parameterName,
         unit: data.unit,
+        threshold: data.threshold,
+        thresholdComparison: data.thresholdComparison,
         timestamp: Date.now()
     };
     
@@ -1370,6 +1462,11 @@ function showComparisonModal() {
     
     comparisonHistory.forEach((entry, i) => {
         const date = new Date(entry.timestamp).toLocaleDateString();
+        const thresholdText = entry.threshold !== null ? 
+            `<div style="margin-top: 8px; font-size: 0.85em; color: ${entry.thresholdComparison?.exceedsThreshold ? '#ef4444' : '#10b981'};">
+                Threshold: ${entry.threshold}${entry.unit} - ${entry.thresholdComparison?.exceedsThreshold ? 'Exceeded' : 'Not exceeded'} by ${entry.thresholdComparison?.absoluteDifference.toFixed(2)}${entry.unit}
+            </div>` : '';
+        
         html += `
             <div style="background: rgba(0, 196, 255, 0.1); padding: 20px; border-radius: 12px; border: 2px solid rgba(0, 196, 255, 0.3);">
                 <div style="color: #1E1E2F; font-weight: 700; margin-bottom: 10px;">
@@ -1381,6 +1478,7 @@ function showComparisonModal() {
                     <div><strong>Max:</strong> ${entry.stats.max}${entry.unit || '°C'}</div>
                     <div><strong>Std:</strong> ${entry.stats.std}</div>
                 </div>
+                ${thresholdText}
                 <div style="font-size: 0.8em; color: rgba(30, 30, 47, 0.6); margin-top: 8px;">Analyzed: ${date}</div>
             </div>
         `;
@@ -1396,4 +1494,4 @@ function showComparisonModal() {
     document.body.appendChild(modal);
 }
 
-console.log('✅ DropCheck Scientific v2.0 - Ready!');
+console.log('✅ DropCheck Scientific v2.0 with Threshold - Ready!');
