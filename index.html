@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DropCheck - Weather Intelligence Platform</title>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'EB Garamond', serif;
+            background: #0d1117;
+            color: #fff;
+            overflow-x: hidden;
+        }
+
+        .bg-image {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            background-image: url('https://images.pexels.com/photos/15104444/pexels-photo-15104444.jpeg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+        }
+
+        .bg-image::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(13, 17, 23, 0.92), rgba(22, 27, 34, 0.90));
+            backdrop-filter: blur(2px);
+        }
+
+        /* Language Selector */
+        .lang-selector {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: rgba(22, 27, 34, 0.9);
+            border: 1px solid rgba(46, 169, 223, 0.3);
+            border-radius: 10px;
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .lang-selector:hover {
+            background: rgba(46, 169, 223, 0.2);
+            border-color: #2ea9df;
+        }
+
+        .lang-selector select {
+            background: transparent;
+            border: none;
+            color: #2ea9df;
+            font-family: 'EB Garamond', serif;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 60px 20px 40px;
+        }
+
+        .logo-section {
+            text-align: center;
+            margin-bottom: 60px;
+            animation: fadeInDown 1s ease-out;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo {
+            font-size: clamp(3.5em, 8vw, 7em);
+            font-weight: 800;
+            background: linear-gradient(135deg, #2ea9df, #1e6091, #0ea5e9);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 20px;
+            letter-spacing: 0.08em;
+            animation: glowPulse 3s ease-in-out infinite;
+            filter: drop-shadow(0 0 30px rgba(46, 169, 223, 0.5));
+        }
+
+        @keyframes glowPulse {
+            0%, 100% {
+                filter: drop-shadow(0 0 30px rgba(46, 169, 223, 0.5));
+            }
+            50% {
+                filter: drop-shadow(0 0 50px rgba(46, 169, 223, 0.8));
+            }
+        }
+
+        .tagline {
+            font-size: clamp(1.3em, 3vw, 2em);
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 500;
+            margin-bottom: 15px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .subtitle {
+            font-size: clamp(1em, 2vw, 1.2em);
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: 400;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .nasa-badge {
+            display: inline-block;
+            background: rgba(46, 169, 223, 0.2);
+            border: 2px solid rgba(46, 169, 223, 0.5);
+            padding: 12px 30px;
+            border-radius: 50px;
+            font-size: 1em;
+            font-weight: 700;
+            color: #2ea9df;
+            margin-top: 20px;
+            animation: badgePulse 2s ease-in-out infinite;
+        }
+
+        @keyframes badgePulse {
+            0%, 100% { 
+                box-shadow: 0 0 20px rgba(46, 169, 223, 0.3);
+            }
+            50% { 
+                box-shadow: 0 0 40px rgba(46, 169, 223, 0.6);
+            }
+        }
+
+        /* Cards Grid - Fixed Layout */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(350px, 550px));
+            gap: 40px;
+            max-width: 1200px;
+            width: 100%;
+            animation: fadeInUp 1s ease-out 0.3s both;
+            margin-bottom: 30px;
+            justify-content: center;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .feature-card {
+            background: rgba(22, 27, 34, 0.85);
+            backdrop-filter: blur(20px);
+            border: 2px solid rgba(46, 169, 223, 0.2);
+            border-radius: 30px;
+            padding: 50px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(46, 169, 223, 0.1), transparent);
+            transition: left 0.6s;
+        }
+
+        .feature-card:hover::before {
+            left: 100%;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-15px);
+            border-color: rgba(46, 169, 223, 0.5);
+            box-shadow: 0 30px 80px rgba(46, 169, 223, 0.3);
+        }
+
+        .card-icon {
+            font-size: 4.5em;
+            margin-bottom: 25px;
+            display: block;
+            filter: drop-shadow(0 10px 20px rgba(46, 169, 223, 0.3));
+        }
+
+        .card-title {
+            font-size: 2.2em;
+            font-weight: 800;
+            margin-bottom: 15px;
+            color: #2ea9df;
+        }
+
+        .card-description {
+            font-size: 1.2em;
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.8;
+            margin-bottom: 25px;
+        }
+
+        .card-features {
+            list-style: none;
+            margin-bottom: 30px;
+        }
+
+        .card-features li {
+            padding: 10px 0;
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 1.05em;
+            position: relative;
+            padding-left: 30px;
+        }
+
+        .card-features li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #2ea9df;
+            font-weight: bold;
+            font-size: 1.3em;
+        }
+
+        .card-button {
+            background: linear-gradient(135deg, #2ea9df, #1e6091);
+            color: white;
+            border: none;
+            padding: 18px 40px;
+            border-radius: 15px;
+            font-size: 1.1em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(46, 169, 223, 0.3);
+            display: inline-block;
+            font-family: 'EB Garamond', serif;
+        }
+
+        .card-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(46, 169, 223, 0.5);
+        }
+
+        /* Team Card - Full Width Below */
+        .team-card {
+            grid-column: 1 / -1;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 35px;
+            animation: fadeIn 1s ease-out 0.6s both;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .team-card .card-title {
+            font-size: 1.6em;
+        }
+
+        .team-section {
+            margin: 15px 0;
+        }
+
+        .team-section h4 {
+            color: #2ea9df;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .team-members {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.95em;
+            line-height: 1.8;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 1em;
+            margin-top: 30px;
+            animation: fadeIn 1s ease-out 0.8s both;
+        }
+
+        .footer-credits {
+            margin-top: 15px;
+            font-size: 0.9em;
+            color: rgba(255, 255, 255, 0.4);
+            line-height: 1.6;
+        }
+
+        .parama-credit {
+            color: #2ea9df;
+            font-weight: 700;
+            margin-top: 10px;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .cards-grid {
+                grid-template-columns: 1fr;
+                max-width: 550px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .feature-card {
+                padding: 35px 30px;
+            }
+
+            .team-card {
+                padding: 30px 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-image"></div>
+    
+    <div class="lang-selector">
+        <select id="lang-select" onchange="changeLanguage(this.value)">
+            <option value="en">English</option>
+            <option value="es">Español</option>
+        </select>
+    </div>
+    
+    <div class="container">
+        <div class="logo-section">
+            <h1 class="logo">DropCheck</h1>
+            <p class="tagline" data-en="Weather Intelligence Platform" data-es="Plataforma de Inteligencia Meteorológica">Weather Intelligence Platform</p>
+            <p class="subtitle" data-en="Real NASA Data • Advanced Analysis • Smart Forecasting" data-es="Datos Reales de NASA • Análisis Avanzado • Pronóstico Inteligente">Real NASA Data • Advanced Analysis • Smart Forecasting</p>
+            <span class="nasa-badge">NASA Space Apps Challenge 2025</span>
+        </div>
+
+        <div class="cards-grid">
+            <!-- Consumer Card -->
+            <a href="consumer.html" class="feature-card">
+                <span class="card-icon">🌤</span>
+                <h2 class="card-title" data-en="Quick Forecast" data-es="Pronóstico Rápido">Quick Forecast</h2>
+                <p class="card-description" data-en="Real-time weather forecasts powered by Open-Meteo API" data-es="Pronósticos meteorológicos en tiempo real impulsados por Open-Meteo API">
+                    Real-time weather forecasts powered by Open-Meteo API
+                </p>
+                <ul class="card-features">
+                    <li data-en="24-hour hourly forecast" data-es="Pronóstico por hora de 24 horas">24-hour hourly forecast</li>
+                    <li data-en="7-day outlook" data-es="Perspectiva de 7 días">7-day outlook</li>
+                    <li data-en="Global city search" data-es="Búsqueda de ciudades global">Global city search</li>
+                    <li data-en="Live data updates" data-es="Actualizaciones de datos en vivo">Live data updates</li>
+                </ul>
+                <span class="card-button" data-en="Get Forecast →" data-es="Obtener Pronóstico →">Get Forecast →</span>
+            </a>
+
+            <!-- Scientific Card -->
+            <a href="scientific.html" class="feature-card">
+                <span class="card-icon">📊</span>
+                <h2 class="card-title" data-en="Scientific Analysis" data-es="Análisis Científico">Scientific Analysis</h2>
+                <p class="card-description" data-en="Advanced climate analysis with 20+ years of NASA POWER data" data-es="Análisis climático avanzado con más de 20 años de datos de NASA POWER">
+                    Advanced climate analysis with 20+ years of NASA POWER data
+                </p>
+                <ul class="card-features">
+                    <li data-en="Historical data analysis" data-es="Análisis de datos históricos">Historical data analysis</li>
+                    <li data-en="Date range comparison" data-es="Comparación de rangos de fechas">Date range comparison</li>
+                    <li data-en="Polygon area analysis" data-es="Análisis de áreas poligonales">Polygon area analysis</li>
+                    <li data-en="Flood risk assessment" data-es="Evaluación de riesgo de inundaciones">Flood risk assessment</li>
+                    <li data-en="AI-powered insights" data-es="Insights impulsados por IA">AI-powered insights</li>
+                </ul>
+                <span class="card-button" data-en="Analyze Data →" data-es="Analizar Datos →">Analyze Data →</span>
+            </a>
+
+            <!-- Team Info Card -->
+            <div class="feature-card team-card">
+                <span class="card-icon">👥</span>
+                <h2 class="card-title" data-en="Our Team" data-es="Nuestro Equipo">Our Team</h2>
+                <p class="card-description" data-en="Building weather intelligence solutions year after year" data-es="Construyendo soluciones de inteligencia meteorológica año tras año">
+                    innovating through technology year after year
+                </p>
+                
+                <div class="team-section">
+                    <h4>2024 Team Second Place Winners at the National Level</h4>
+                    <div class="team-members">
+                        Carlos • Shirley • Maria Belen<br>
+                        Nieves • Sonia • Cambara
+                    </div>
+                </div>
+                
+                <div class="team-section">
+                    <h4>2025 Team</h4>
+                    <div class="team-members">
+                        Carlos • Shirley • Sonia<br>
+                        Nieves • Triana • Viviana
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p data-en="100% Real Data • Open Source • Built for Earth" data-es="100% Datos Reales • Código Abierto • Construido para la Tierra">100% Real Data • Open Source • Built for Earth</p>
+            <div class="footer-credits">
+                <span data-en="Powered by NASA POWER API & Open-Meteo API" data-es="Impulsado por NASA POWER API & Open-Meteo API">Powered by NASA POWER API & Open-Meteo API</span><br>
+                NASA Space Apps Challenge 2025<br>
+                <span data-en="Data sources: NASA POWER (20+ years historical climate data) • Open-Meteo (Real-time weather forecasts)" data-es="Fuentes de datos: NASA POWER (más de 20 años de datos climáticos históricos) • Open-Meteo (Pronósticos meteorológicos en tiempo real)">Data sources: NASA POWER (20+ years historical climate data) • Open-Meteo (Real-time weather forecasts)</span>
+            </div>
+            <div class="parama-credit">Developed by PARAMÁ Legends</div>
+        </div>
+    </div>
+
+    <script>
+        function changeLanguage(lang) {
+            document.querySelectorAll('[data-en]').forEach(el => {
+                if (lang === 'en') {
+                    el.textContent = el.getAttribute('data-en');
+                } else if (lang === 'es') {
+                    el.textContent = el.getAttribute('data-es');
+                }
+            });
+            localStorage.setItem('selectedLanguage', lang);
+        }
+
+        // Load saved language
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedLang = localStorage.getItem('selectedLanguage') || 'en';
+            document.getElementById('lang-select').value = savedLang;
+            if (savedLang !== 'en') {
+                changeLanguage(savedLang);
+            }
+        });
+    </script>
+</body>
+</html>
