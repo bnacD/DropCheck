@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DropCheck Scientific - NASA Data Analysis</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" 
+          crossorigin=""/>
     <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="scientific.css">
@@ -12,54 +15,44 @@
 <body>
     <div class="space-bg"></div>
     
-    <div class="lang-selector" data-tooltip="Cambia el idioma de la interfaz">
-        <select id="lang-select">
-            <option value="en">English</option>
-            <option value="es">Español</option>
-        </select>
-    </div>
-
+    <a href="index.html" class="back-link">← Back to Home</a>
+    
     <div class="container">
         <header class="header">
-            <a href="landing.html" class="back-link" data-tooltip="Volver a la página principal">← Back to Home</a>
-            <h1>🛰️ Scientific Analysis</h1>
+            <h1>🛰 Scientific Analysis</h1>
             <p>NASA POWER API • 20+ Years Historical Data • AI-Powered Insights</p>
         </header>
-
+        
         <div class="main-grid">
-            <!-- LEFT PANEL -->
             <div class="glass-panel">
                 <div class="panel-header">
                     <span class="panel-icon">🎯</span>
                     <h2>Configuration</h2>
                 </div>
-
-                <!-- Mode Selector -->
+                
                 <div class="mode-selector">
-                    <button class="mode-btn active" data-mode="single" data-tooltip="Analiza un punto específico del mapa con datos históricos">📍 Point</button>
-                    <button class="mode-btn" data-mode="range" data-tooltip="Compara patrones climáticos entre múltiples fechas">📅 Range</button>
-                    <button class="mode-btn" data-mode="polygon" data-tooltip="Estudia un área completa dibujada en el mapa">🗺️ Area</button>
-                    <button class="mode-btn" data-mode="flood" data-tooltip="Evalúa riesgo de inundaciones basado en precipitación y humedad">💧 Flood</button>
+                    <button class="mode-btn active" data-mode="single" title="Analyze a single point with historical data">📍 Point</button>
+                    <button class="mode-btn" data-mode="range" title="Compare multiple dates to find best/worst">📅 Range</button>
+                    <button class="mode-btn" data-mode="polygon" title="Analyze an area to find optimal locations">🗺 Area</button>
+                    <button class="mode-btn" data-mode="flood" title="Assess flood risk based on precipitation and humidity">💧 Flood</button>
                 </div>
-
-                <!-- Map -->
-                <div id="map" data-tooltip="Haz clic en el mapa para seleccionar ubicación o arrastra el marcador"></div>
+                
+                <div id="map" style="height: 400px; width: 100%;"></div>
+                
                 <div class="coordinates-display" id="coordinates">📍 Select location</div>
-
-                <!-- Quick Locations -->
+                
                 <div class="input-group">
                     <label>⚡ Quick Locations</label>
                     <div class="location-chips" id="quick-locations"></div>
                 </div>
-
-                <!-- Date Selection -->
+                
                 <div id="date-container-single">
                     <div class="input-group">
                         <label>📅 Date</label>
-                        <input type="date" id="date-input" data-tooltip="Selecciona la fecha para analizar datos históricos">
+                        <input type="date" id="date-input">
                     </div>
                 </div>
-
+                
                 <div id="date-container-range" style="display: none;">
                     <div class="input-group">
                         <label>📅 Start Date</label>
@@ -70,144 +63,78 @@
                         <input type="date" id="end-date">
                     </div>
                 </div>
-
-                <!-- Parameter Selection -->
-                <div class="input-group">
-                    <label>🌡️ Parameter</label>
-                    <select id="parameter-select">
-                        <option value="T2M">Temperature (Average)</option>
-                        <option value="T2M_MAX">Temperature (Max)</option>
-                        <option value="T2M_MIN">Temperature (Min)</option>
-                        <option value="PRECTOTCORR">Precipitation</option>
-                        <option value="WS2M">Wind Speed</option>
-                        <option value="RH2M">Relative Humidity</option>
-                        <option value="ALLSKY_SFC_SW_DWN">Solar Radiation</option>
-                    </select>
-                </div>
-
-                <!-- Analyze Button -->
-                <button class="btn-analyze" id="analyze-btn" data-tooltip="Ejecuta el análisis con datos reales de NASA POWER (20+ años de historial climático)">
-                    ⚡ Analyze with NASA Data
+                
+                <button class="btn-analyze" id="analyze-btn">
+                    <span>⚡ Analyze with NASA Data</span>
                 </button>
-
-                <!-- Export Button -->
-                <button class="btn-analyze export-btn" id="export-btn" style="display: none; background: linear-gradient(135deg, #10b981, #059669); margin-top: 15px;">
-                    💾 Export Data (CSV/JSON)
+                
+                <button class="btn-analyze export-btn" id="compare-btn" style="display: none; margin-top: 15px;">
+                    📊 View Comparison History
                 </button>
             </div>
-
-            <!-- RIGHT PANEL -->
+            
             <div class="glass-panel">
                 <div class="panel-header">
                     <span class="panel-icon">📊</span>
                     <h2>Results</h2>
                 </div>
-
                 <div class="results-container" id="results-container">
                     <div class="empty-state">
                         <div class="empty-icon">🎯</div>
                         <h3>Ready to Analyze</h3>
-                        <p>Select mode, location, parameter and date to begin comprehensive NASA data analysis</p>
+                        <p>Select mode, location, and date to begin comprehensive NASA data analysis</p>
                     </div>
                 </div>
-
-                <!-- Charts Section -->
-                <div id="charts-section" style="display: none;"></div>
             </div>
         </div>
-
+        
         <div class="credits-footer">
             <strong>NASA Space Apps Challenge 2025</strong><br>
-            <span>Powered by NASA POWER API (20+ years climate data)</span><br>
-            <span>Data sources: NASA Langley Research Center • Open-Meteo API</span><br>
-            <span>Maps: OpenStreetMap Contributors • Leaflet.js</span><br>
-            <span>Built with real satellite and weather station data</span>
+            Powered by NASA POWER API (20+ years climate data)<br>
+            Data sources: NASA Langley Research Center • Open-Meteo API<br>
+            Maps: OpenStreetMap Contributors • Leaflet.js<br>
+            Built with real satellite and weather station data
             <div class="parama-credit">Developed by PARAMÁ Legends</div>
         </div>
     </div>
-
-    <!-- AI WIDGET -->
+    
+    <!-- AI Widget -->
     <div class="ai-widget">
-        <button class="ai-toggle-btn" id="ai-toggle-btn" data-tooltip="Abre el asistente de IA para interpretar los resultados del análisis">🤖</button>
-        
-        <div class="ai-chat-window" id="ai-chat-container" style="display: none;">
+        <button class="ai-toggle-btn" id="ai-toggle">🤖</button>
+        <div class="ai-chat-window" id="ai-chat" style="display: none;">
             <div class="ai-chat-header">
                 <div class="ai-header-left">
                     <span class="ai-icon">🤖</span>
                     <div>
-                        <h3>AI Weather Assistant</h3>
-                        <p class="ai-status" id="ai-status">Checking Ollama...</p>
+                        <h3>AI Assistant</h3>
+                        <div class="ai-status">Ready to help</div>
                     </div>
                 </div>
-                <button class="ai-close-btn" id="ai-close-btn">✕</button>
+                <button class="ai-close-btn" id="ai-close">×</button>
             </div>
-
-            <div class="ai-chat-body" id="ai-chat-body">
-                <div class="ai-message ai-message-bot">
+            <div class="ai-chat-body" id="ai-messages">
+                <div class="ai-message">
                     <div class="ai-avatar">🤖</div>
                     <div class="ai-bubble">
-                        <p>Hello! I'm your AI weather assistant powered by Ollama.</p>
-                        <p>I can help you interpret climate data, understand trends, and make informed decisions about weather conditions.</p>
-                        <p><strong>Ask me about:</strong></p>
-                        <ul>
-                            <li>Weather patterns and trends</li>
-                            <li>Best dates for outdoor activities</li>
-                            <li>Risk assessment for weather events</li>
-                            <li>Data interpretation and insights</li>
-                        </ul>
+                        <p>Hello! I can help you interpret weather data and provide insights. Ask me anything about your analysis results!</p>
                     </div>
                 </div>
             </div>
-
             <div class="ai-chat-footer">
                 <div class="ai-input-container">
-                    <textarea id="ai-input" placeholder="Ask about weather data..." rows="2"></textarea>
-                    <button class="ai-send-btn" id="ai-send-btn"><span>📤</span></button>
+                    <textarea id="ai-input" placeholder="Ask about the data..." rows="2"></textarea>
+                    <button class="ai-send-btn" id="ai-send">➤</button>
                 </div>
                 <div class="ai-footer-info">
-                    <span class="ai-model-info" id="ai-model-info">Model: mistral</span>
-                    <button class="ai-settings-btn" id="ai-settings-btn">⚙️</button>
+                    <span class="ai-model-info">AI Assistant v1.0</span>
                 </div>
-            </div>
-        </div>
-
-        <!-- AI Settings Modal -->
-        <div class="ai-settings-modal" id="ai-settings-modal" style="display: none;">
-            <div class="ai-settings-content">
-                <h3>🔧 Ollama Settings</h3>
-                
-                <div class="setting-group">
-                    <label>Ollama URL:</label>
-                    <input type="text" id="ollama-url" value="http://localhost:11434" />
-                </div>
-
-                <div class="setting-group">
-                    <label>Model:</label>
-                    <select id="ollama-model">
-                        <option value="mistral">Mistral</option>
-                        <option value="llama2">Llama 2</option>
-                        <option value="codellama">Code Llama</option>
-                        <option value="neural-chat">Neural Chat</option>
-                    </select>
-                </div>
-
-                <div class="setting-group">
-                    <label>Temperature:</label>
-                    <input type="range" id="ollama-temp" min="0" max="1" step="0.1" value="0.7" />
-                    <span id="temp-value">0.7</span>
-                </div>
-
-                <div class="setting-actions">
-                    <button class="btn-secondary" id="test-connection-btn">🔌 Test Connection</button>
-                    <button class="btn-primary" id="save-settings-btn">💾 Save Settings</button>
-                </div>
-
-                <div class="connection-status" id="connection-status"></div>
             </div>
         </div>
     </div>
-
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+            crossorigin=""></script>
     <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="scientific.js"></script>

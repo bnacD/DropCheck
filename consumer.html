@@ -6,127 +6,26 @@
     <title>DropCheck Forecast - Real-Time Weather</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=Roboto+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #E0F7FA 0%, #F5F7FA 50%, #E8F4F8 100%); color: #1E1E2F; overflow-x: hidden; min-height: 100vh; }
-        .space-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; background-image: radial-gradient(circle at 20% 30%, rgba(0, 196, 255, 0.08) 0%, transparent 50%), radial-gradient(circle at 80% 70%, rgba(130, 255, 210, 0.08) 0%, transparent 50%); animation: bgFloat 18s ease-in-out infinite; }
-        @keyframes bgFloat { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
-        .lang-selector { position: fixed; top: 25px; right: 25px; z-index: 1000; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(10px); border: 2px solid rgba(0, 196, 255, 0.3); border-radius: 12px; padding: 10px 20px; box-shadow: 0 8px 32px rgba(0, 196, 255, 0.15); }
-        .lang-selector select { background: transparent; border: none; color: #1E1E2F; font-family: 'Inter', sans-serif; font-size: 0.95em; font-weight: 600; cursor: pointer; outline: none; }
-        .container { position: relative; z-index: 2; max-width: 1600px; margin: 0 auto; padding: 30px; }
-        .header { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(30px); border: 2px solid rgba(0, 196, 255, 0.2); border-radius: 24px; padding: 45px; margin-bottom: 35px; box-shadow: 0 20px 60px rgba(0, 196, 255, 0.15); text-align: center; position: relative; }
-        .back-link { position: absolute; top: 25px; left: 30px; color: #00C4FF; text-decoration: none; font-weight: 600; transition: all 0.3s ease; }
-        .back-link:hover { color: #82FFD2; transform: translateX(-5px); }
-        .header h1 { font-family: 'Orbitron', sans-serif; font-size: clamp(2em, 5vw, 3em); font-weight: 800; background: linear-gradient(135deg, #00C4FF, #82FFD2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 12px; }
-        .header p { color: rgba(30, 30, 47, 0.7); font-size: 1.1em; }
-        .search-panel { background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(20px); border: 2px solid rgba(0, 196, 255, 0.2); border-radius: 24px; padding: 35px; margin-bottom: 35px; box-shadow: 0 20px 60px rgba(0, 196, 255, 0.12); }
-        .search-box { display: grid; grid-template-columns: 1fr auto; gap: 15px; margin-bottom: 28px; }
-        #location-input { padding: 18px 25px; background: rgba(255, 255, 255, 0.9); border: 2px solid rgba(0, 196, 255, 0.2); border-radius: 14px; color: #1E1E2F; font-size: 1.1em; font-family: 'Inter', sans-serif; transition: all 0.3s ease; width: 100%; }
-        #location-input:focus { outline: none; border-color: #00C4FF; background: white; box-shadow: 0 0 0 4px rgba(0, 196, 255, 0.1); }
-        #location-input::placeholder { color: rgba(30, 30, 47, 0.4); }
-        .btn-search { background: linear-gradient(135deg, #00C4FF, #82FFD2); color: white; border: none; padding: 18px 45px; border-radius: 14px; font-size: 1.1em; font-weight: 700; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 10px 30px rgba(0, 196, 255, 0.3); font-family: 'Inter', sans-serif; white-space: nowrap; }
-        .btn-search:hover { transform: translateY(-3px); box-shadow: 0 15px 40px rgba(0, 196, 255, 0.45); }
-        #map { height: 350px; border-radius: 16px; margin: 20px 0; border: 2px solid rgba(0, 196, 255, 0.2); box-shadow: 0 10px 40px rgba(0, 196, 255, 0.15); }
-        .coordinates-display { background: rgba(0, 196, 255, 0.1); border: 2px solid rgba(0, 196, 255, 0.3); padding: 14px; border-radius: 12px; margin-bottom: 22px; font-family: 'Roboto Mono', monospace; text-align: center; color: #00C4FF; font-size: 0.95em; font-weight: 600; }
-        .quick-cities { display: flex; flex-wrap: wrap; gap: 12px; }
-        .city-chip { background: rgba(0, 196, 255, 0.12); border: 2px solid rgba(0, 196, 255, 0.3); padding: 12px 22px; border-radius: 20px; font-size: 0.92em; font-weight: 600; cursor: pointer; transition: all 0.3s ease; color: rgba(30, 30, 47, 0.8); position: relative; }
-        .city-chip:hover { background: linear-gradient(135deg, #00C4FF, #82FFD2); border-color: transparent; color: white; transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0, 196, 255, 0.35); }
-        .current-weather { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(20px); border: 2px solid rgba(0, 196, 255, 0.2); border-radius: 24px; padding: 45px; margin-bottom: 35px; box-shadow: 0 20px 60px rgba(0, 196, 255, 0.15); display: none; }
-        .current-grid { display: grid; grid-template-columns: auto 1fr auto; gap: 40px; align-items: center; }
-        .current-icon { font-size: 7.5em; filter: drop-shadow(0 10px 30px rgba(0, 196, 255, 0.4)); }
-        .current-info h2 { font-family: 'Orbitron', sans-serif; font-size: 2em; margin-bottom: 10px; background: linear-gradient(135deg, #00C4FF, #1E1E2F); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .current-info p { color: rgba(30, 30, 47, 0.6); font-size: 1em; }
-        .temp-big { font-family: 'Roboto Mono', monospace; font-size: 5.5em; font-weight: 900; background: linear-gradient(135deg, #00C4FF, #82FFD2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1; }
-        .feels-like { color: rgba(30, 30, 47, 0.6); font-size: 1em; margin-top: 10px; }
-        
-        .ai-quick-questions { background: rgba(232, 197, 71, 0.1); border: 2px solid rgba(232, 197, 71, 0.3); border-radius: 16px; padding: 20px; margin-bottom: 25px; display: none; }
-        .ai-quick-questions h3 { color: #E8C547; font-size: 1.1em; margin-bottom: 15px; font-weight: 700; }
-        .quick-question-btn { background: rgba(255, 255, 255, 0.8); border: 2px solid rgba(232, 197, 71, 0.4); color: #1E1E2F; padding: 12px 20px; border-radius: 12px; margin: 6px; cursor: pointer; font-size: 0.9em; font-weight: 600; transition: all 0.3s; display: inline-block; }
-        .quick-question-btn:hover { background: rgba(232, 197, 71, 0.2); transform: translateY(-2px); }
-        .ai-response { background: rgba(0, 196, 255, 0.1); border: 2px solid rgba(0, 196, 255, 0.3); border-radius: 12px; padding: 18px; margin-top: 15px; display: none; }
-        .ai-response-text { color: #1E1E2F; line-height: 1.6; font-size: 0.95em; }
-        
-        .view-toggle { display: flex; gap: 15px; justify-content: center; margin-bottom: 35px; display: none; }
-        .toggle-btn { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(10px); color: rgba(30, 30, 47, 0.7); border: 2px solid rgba(0, 196, 255, 0.2); padding: 18px 40px; border-radius: 16px; font-size: 1.05em; font-weight: 700; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; gap: 12px; font-family: 'Inter', sans-serif; }
-        .toggle-btn:hover { transform: translateY(-3px); border-color: rgba(0, 196, 255, 0.5); }
-        .toggle-btn.active { background: linear-gradient(135deg, #00C4FF, #82FFD2); color: white; border-color: transparent; box-shadow: 0 10px 30px rgba(0, 196, 255, 0.4); }
-        .hourly-section { margin-bottom: 35px; display: none; }
-        .hourly-scroll { display: flex; gap: 20px; overflow-x: auto; padding: 18px 0; scroll-behavior: smooth; }
-        .hourly-scroll::-webkit-scrollbar { height: 8px; }
-        .hourly-scroll::-webkit-scrollbar-track { background: rgba(0, 196, 255, 0.05); border-radius: 10px; }
-        .hourly-scroll::-webkit-scrollbar-thumb { background: linear-gradient(135deg, #00C4FF, #82FFD2); border-radius: 10px; }
-        .hourly-card { background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(15px); border: 2px solid rgba(0, 196, 255, 0.2); border-radius: 20px; padding: 28px 22px; min-width: 160px; text-align: center; transition: all 0.3s ease; cursor: pointer; }
-        .hourly-card:hover { transform: translateY(-8px); box-shadow: 0 15px 40px rgba(0, 196, 255, 0.3); border-color: rgba(232, 197, 71, 0.5); }
-        .hourly-time { color: #00C4FF; font-weight: 700; font-size: 0.95em; margin-bottom: 15px; }
-        .hourly-icon { font-size: 3.2em; margin: 15px 0; filter: drop-shadow(0 4px 12px rgba(0, 196, 255, 0.2)); }
-        .hourly-temp { font-family: 'Roboto Mono', monospace; font-size: 2.2em; font-weight: 800; background: linear-gradient(135deg, #00C4FF, #82FFD2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 15px 0; }
-        .hourly-details { display: flex; flex-direction: column; gap: 8px; font-size: 0.88em; color: rgba(30, 30, 47, 0.6); }
-        .daily-section { display: none; }
-        .forecast-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 28px; }
-        .weather-card { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(20px); border: 2px solid rgba(0, 196, 255, 0.2); border-radius: 24px; padding: 38px; box-shadow: 0 20px 60px rgba(0, 196, 255, 0.12); transition: all 0.4s ease; cursor: pointer; }
-        .weather-card:hover { transform: translateY(-12px); border-color: rgba(0, 196, 255, 0.5); box-shadow: 0 30px 80px rgba(0, 196, 255, 0.25); }
-        .card-date { color: #00C4FF; font-weight: 700; font-size: 0.9em; text-transform: uppercase; margin-bottom: 10px; letter-spacing: 0.5px; }
-        .card-day { font-family: 'Orbitron', sans-serif; color: #1E1E2F; font-size: 1.7em; font-weight: 700; margin-bottom: 22px; }
-        .card-icon-big { font-size: 5.5em; text-align: center; margin: 28px 0; filter: drop-shadow(0 8px 24px rgba(0, 196, 255, 0.3)); }
-        .temp-main-big { font-family: 'Roboto Mono', monospace; font-size: 4em; font-weight: 900; background: linear-gradient(135deg, #00C4FF, #82FFD2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1; text-align: center; }
-        .temp-range { color: rgba(30, 30, 47, 0.6); font-size: 1.05em; margin-top: 12px; text-align: center; font-weight: 500; }
-        .card-description { text-align: center; color: #00C4FF; font-weight: 700; font-size: 1.2em; margin-bottom: 28px; text-transform: capitalize; }
-        .card-details { border-top: 2px solid rgba(0, 196, 255, 0.15); padding-top: 22px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
-        .detail-item { display: flex; align-items: center; gap: 12px; font-size: 0.95em; color: rgba(30, 30, 47, 0.7); }
-        .detail-icon { font-size: 1.7em; }
-        .detail-value { font-weight: 700; color: #1E1E2F; }
-        .loading { text-align: center; padding: 90px 20px; display: none; }
-        .loading-ring { width: 80px; height: 80px; border: 4px solid rgba(0, 196, 255, 0.2); border-top-color: #00C4FF; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 30px; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .loading-text { color: #00C4FF; font-size: 1.25em; font-weight: 700; font-family: 'Orbitron', sans-serif; }
-        .credits-footer { background: rgba(255, 255, 255, 0.7); border: 2px solid rgba(0, 196, 255, 0.2); border-radius: 18px; padding: 22px; margin-top: 30px; text-align: center; color: rgba(30, 30, 47, 0.6); font-size: 0.92em; line-height: 1.8; }
-        .credits-footer strong { color: #00C4FF; }
-        .parama-credit { color: #E8C547; font-weight: 700; margin-top: 12px; }
-        
-        /* Tooltips Bilingües */
-        .custom-tooltip { position: fixed; z-index: 10000; opacity: 0; transform: translateY(-5px); transition: all 0.3s; pointer-events: none; }
-        .custom-tooltip.show { opacity: 1; transform: translateY(0); }
-        .tooltip-content { background: linear-gradient(135deg, rgba(232, 197, 71, 0.98), rgba(255, 215, 0, 0.98)); color: #1E1E2F; padding: 12px 18px; border-radius: 12px; font-size: 0.9em; font-weight: 600; box-shadow: 0 8px 32px rgba(232, 197, 71, 0.5); max-width: 280px; line-height: 1.4; }
-        
-        @media (max-width: 1024px) { .current-grid { grid-template-columns: 1fr; text-align: center; } }
-        @media (max-width: 768px) { 
-            .search-box { grid-template-columns: 1fr; } 
-            .forecast-grid { grid-template-columns: 1fr; }
-            .current-grid { gap: 20px; }
-            #map { height: 280px; }
-            .header { padding: 30px 20px; }
-            .back-link { position: static; display: block; margin-bottom: 15px; text-align: left; }
-        }
-        @media (max-width: 480px) {
-            .container { padding: 15px; }
-            .temp-big { font-size: 4em; }
-            .current-icon { font-size: 5em; }
-            .btn-search { padding: 16px 30px; }
-        }
-    </style>
+    <link rel="stylesheet" href="consumer.css">
 </head>
 <body>
     <div class="space-bg"></div>
-    <div class="lang-selector">
-        <select id="lang-select">
-            <option value="en">English</option>
-            <option value="es">Español</option>
-        </select>
-    </div>
+    
+    <a href="index.html" class="back-link">← Back to Home</a>
+    
     <div class="container">
         <header class="header">
-            <a href="index.html" class="back-link" data-en="← Back to Home" data-es="← Volver al Inicio">← Back to Home</a>
-            <h1 data-en="🌤 Weather Forecast" data-es="🌤 Pronóstico del Tiempo">🌤 Weather Forecast</h1>
-            <p data-en="Real-time forecasts powered by Open-Meteo API" data-es="Pronósticos en tiempo real impulsados por Open-Meteo API">Real-time forecasts powered by Open-Meteo API</p>
+            <h1>🌤 Weather Forecast</h1>
+            <p>Real-time forecasts powered by Open-Meteo API</p>
         </header>
         
         <div class="search-panel">
             <div class="search-box">
-                <input type="text" id="location-input" data-placeholder-en="Search any city worldwide..." data-placeholder-es="Buscar cualquier ciudad del mundo..." placeholder="Search any city worldwide...">
-                <button class="btn-search" id="search-btn"><span data-en="🔍 Get Forecast" data-es="🔍 Obtener Pronóstico">🔍 Get Forecast</span></button>
+                <input type="text" id="location-input" placeholder="Search any city worldwide...">
+                <button class="btn-search" id="search-btn"><span>🔍 Get Forecast</span></button>
             </div>
-            <div id="map" data-tooltip-en="Click anywhere on the map to select a location, or drag the red marker" data-tooltip-es="Haz clic en cualquier lugar del mapa para seleccionar una ubicación, o arrastra el marcador rojo"></div>
-            <div class="coordinates-display" id="coordinates" data-en="📍 Click map to select location" data-es="📍 Haz clic en el mapa para seleccionar ubicación">📍 Click map to select location</div>
+            <div id="map"></div>
+            <div class="coordinates-display" id="coordinates">📍 Click map to select location</div>
             <div class="quick-cities" id="quick-cities"></div>
         </div>
         
@@ -144,22 +43,14 @@
             </div>
         </div>
         
-        <div class="ai-quick-questions" id="ai-questions">
-            <h3 data-en="⚡ Quick Questions" data-es="⚡ Preguntas Rápidas">⚡ Quick Questions</h3>
-            <div id="question-buttons"></div>
-            <div class="ai-response" id="ai-response">
-                <div class="ai-response-text" id="ai-response-text"></div>
-            </div>
-        </div>
-        
         <div class="view-toggle" id="view-toggle">
-            <button class="toggle-btn active" data-view="hourly" data-en="🕐 Hourly (24h)" data-es="🕐 Por Hora (24h)">🕐 Hourly (24h)</button>
-            <button class="toggle-btn" data-view="daily" data-en="📅 Daily (7 days)" data-es="📅 Diario (7 días)">📅 Daily (7 days)</button>
+            <button class="toggle-btn active" data-view="hourly">🕐 Hourly (24h)</button>
+            <button class="toggle-btn" data-view="daily">📅 Daily (7 days)</button>
         </div>
         
         <div class="loading" id="loading">
             <div class="loading-ring"></div>
-            <p class="loading-text" data-en="Fetching weather data..." data-es="Obteniendo datos meteorológicos...">Fetching weather data...</p>
+            <p class="loading-text">Fetching weather data...</p>
         </div>
         
         <div class="hourly-section" id="hourly-section">
@@ -172,9 +63,9 @@
         
         <div class="credits-footer">
             <strong>DropCheck Weather Forecast</strong><br>
-            <span data-en="Powered by Open-Meteo API (Real-time weather data)" data-es="Impulsado por Open-Meteo API (Datos meteorológicos en tiempo real)">Powered by Open-Meteo API (Real-time weather data)</span><br>
+            Powered by Open-Meteo API (Real-time weather data)<br>
             NASA Space Apps Challenge 2025<br>
-            <span data-en="Data refreshed every 15 minutes" data-es="Datos actualizados cada 15 minutos">Data refreshed every 15 minutes</span>
+            Data refreshed every 15 minutes
             <div class="parama-credit">Developed by PARAMÁ Legends</div>
         </div>
     </div>

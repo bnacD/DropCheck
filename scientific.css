@@ -39,11 +39,11 @@ body {
     50% { opacity: 0.6; }
 }
 
-/* Language Selector */
-.lang-selector {
+/* Back Link - TOP LEFT */
+.back-link {
     position: fixed;
     top: 25px;
-    right: 25px;
+    left: 25px;
     z-index: 1000;
     background: rgba(255, 255, 255, 0.85);
     backdrop-filter: blur(10px);
@@ -51,17 +51,18 @@ body {
     border-radius: 12px;
     padding: 10px 20px;
     box-shadow: 0 8px 32px rgba(0, 196, 255, 0.15);
+    color: #00C4FF;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    font-size: 0.95em;
 }
 
-.lang-selector select {
-    background: transparent;
-    border: none;
-    color: #1E1E2F;
-    font-family: 'Inter', sans-serif;
-    font-size: 0.95em;
-    font-weight: 600;
-    cursor: pointer;
-    outline: none;
+.back-link:hover {
+    background: rgba(255, 255, 255, 0.95);
+    border-color: #00C4FF;
+    box-shadow: 0 12px 40px rgba(0, 196, 255, 0.25);
+    transform: translateX(-5px);
 }
 
 /* Container */
@@ -70,7 +71,7 @@ body {
     z-index: 2;
     max-width: 1800px;
     margin: 0 auto;
-    padding: 30px;
+    padding: 80px 30px 30px;
 }
 
 /* Header */
@@ -83,23 +84,6 @@ body {
     margin-bottom: 35px;
     box-shadow: 0 20px 60px rgba(0, 196, 255, 0.15);
     text-align: center;
-    position: relative;
-}
-
-.back-link {
-    position: absolute;
-    top: 25px;
-    left: 30px;
-    color: #00C4FF;
-    text-decoration: none;
-    font-weight: 600;
-    transition: all 0.3s ease;
-    font-size: 0.95em;
-}
-
-.back-link:hover {
-    color: #82FFD2;
-    transform: translateX(-5px);
 }
 
 .header h1 {
@@ -647,18 +631,6 @@ body {
     margin-bottom: 0;
 }
 
-.ai-bubble ul {
-    margin: 8px 0 0 20px;
-}
-
-.ai-bubble li {
-    margin: 4px 0;
-}
-
-.ai-bubble strong {
-    color: #1E1E2F;
-}
-
 .ai-chat-footer {
     padding: 18px;
     border-top: 2px solid rgba(0, 196, 255, 0.15);
@@ -725,178 +697,6 @@ body {
     color: rgba(30, 30, 47, 0.5);
 }
 
-.ai-settings-btn {
-    background: transparent;
-    border: 1px solid rgba(0, 196, 255, 0.3);
-    color: #00C4FF;
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
-    font-size: 1.1em;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.ai-settings-btn:hover {
-    background: rgba(0, 196, 255, 0.2);
-    transform: rotate(45deg);
-}
-
-/* AI Settings Modal */
-.ai-settings-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.8);
-    backdrop-filter: blur(10px);
-    z-index: 10000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    animation: fadeIn 0.3s ease-out;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-.ai-settings-content {
-    background: rgba(255, 255, 255, 0.95);
-    border: 2px solid rgba(0, 196, 255, 0.3);
-    border-radius: 24px;
-    padding: 35px;
-    width: 90%;
-    max-width: 500px;
-    box-shadow: 0 20px 60px rgba(0, 196, 255, 0.3);
-}
-
-.ai-settings-content h3 {
-    color: #00C4FF;
-    font-size: 1.5em;
-    margin-bottom: 25px;
-}
-
-.setting-group {
-    margin-bottom: 20px;
-}
-
-.setting-group label {
-    display: block;
-    color: rgba(30, 30, 47, 0.85);
-    font-weight: 600;
-    font-size: 0.9em;
-    margin-bottom: 8px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.setting-group input,
-.setting-group select {
-    width: 100%;
-    padding: 12px 16px;
-    background: rgba(255, 255, 255, 0.8);
-    border: 2px solid rgba(0, 196, 255, 0.3);
-    border-radius: 12px;
-    color: #1E1E2F;
-    font-size: 1em;
-    font-family: 'Inter', sans-serif;
-}
-
-.setting-group input[type="range"] {
-    padding: 0;
-}
-
-#temp-value {
-    display: inline-block;
-    margin-left: 10px;
-    color: #00C4FF;
-    font-weight: 700;
-}
-
-.setting-actions {
-    display: flex;
-    gap: 12px;
-    margin-top: 25px;
-}
-
-.btn-secondary {
-    background: rgba(0, 196, 255, 0.2);
-    border: 2px solid rgba(0, 196, 255, 0.4);
-    color: #00C4FF;
-    padding: 12px 24px;
-    border-radius: 12px;
-    font-weight: 700;
-    cursor: pointer;
-    flex: 1;
-    transition: all 0.3s ease;
-}
-
-.btn-secondary:hover {
-    background: rgba(0, 196, 255, 0.3);
-    transform: translateY(-2px);
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, #00C4FF, #82FFD2);
-    border: none;
-    color: white;
-    padding: 12px 24px;
-    border-radius: 12px;
-    font-weight: 700;
-    cursor: pointer;
-    flex: 1;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 15px rgba(0, 196, 255, 0.4);
-}
-
-.btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0, 196, 255, 0.6);
-}
-
-.connection-status {
-    margin-top: 15px;
-    padding: 12px;
-    border-radius: 12px;
-    text-align: center;
-    font-weight: 600;
-    font-size: 0.9em;
-}
-
-/* Tooltips */
-.custom-tooltip {
-    position: fixed;
-    z-index: 10000;
-    opacity: 0;
-    transform: translateY(-5px);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    pointer-events: none;
-}
-
-.custom-tooltip.show {
-    opacity: 1;
-    transform: translateY(0);
-}
-
-.tooltip-content {
-    background: linear-gradient(135deg, rgba(232, 197, 71, 0.98), rgba(255, 215, 0, 0.98));
-    color: #1E1E2F;
-    padding: 12px 18px;
-    border-radius: 12px;
-    font-size: 0.9em;
-    font-weight: 600;
-    box-shadow: 0 8px 32px rgba(232, 197, 71, 0.5);
-    max-width: 280px;
-    line-height: 1.4;
-}
-
-[data-tooltip] {
-    position: relative;
-}
-
 /* Responsive */
 @media (max-width: 1200px) {
     .main-grid {
@@ -905,14 +705,9 @@ body {
 }
 
 @media (max-width: 768px) {
-    .container { padding: 20px; }
+    .container { padding: 80px 20px 20px; }
     .header {
         padding: 30px 20px;
-    }
-    .back-link {
-        position: static;
-        display: block;
-        margin-bottom: 15px;
     }
     .mode-selector {
         grid-template-columns: repeat(2, 1fr);
@@ -926,7 +721,7 @@ body {
 }
 
 @media (max-width: 480px) {
-    .container { padding: 15px; }
+    .container { padding: 80px 15px 15px; }
     .header { padding: 25px 15px; }
     .glass-panel { padding: 25px; }
     #map { height: 300px; }

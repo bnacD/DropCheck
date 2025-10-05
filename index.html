@@ -39,37 +39,6 @@
             50% { transform: translateY(-20px) scale(1.05); }
         }
 
-        .lang-selector {
-            position: fixed;
-            top: 25px;
-            right: 25px;
-            z-index: 1000;
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(0, 196, 255, 0.3);
-            border-radius: 12px;
-            padding: 10px 20px;
-            box-shadow: 0 8px 32px rgba(0, 196, 255, 0.15);
-            transition: all 0.3s ease;
-        }
-
-        .lang-selector:hover {
-            background: rgba(255, 255, 255, 0.95);
-            border-color: #00C4FF;
-            box-shadow: 0 12px 40px rgba(0, 196, 255, 0.25);
-        }
-
-        .lang-selector select {
-            background: transparent;
-            border: none;
-            color: #1E1E2F;
-            font-family: 'Inter', sans-serif;
-            font-size: 0.95em;
-            font-weight: 600;
-            cursor: pointer;
-            outline: none;
-        }
-
         .container {
             position: relative;
             z-index: 1;
@@ -390,100 +359,6 @@
             margin-top: 12px;
         }
 
-        /* Sistema de Tooltips */
-        .custom-tooltip {
-            position: fixed;
-            z-index: 10000;
-            opacity: 0;
-            transform: translateY(-5px);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            pointer-events: none;
-        }
-
-        .custom-tooltip.show {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        .custom-tooltip.locked {
-            pointer-events: auto;
-        }
-
-        .tooltip-content {
-            background: linear-gradient(135deg, rgba(232, 197, 71, 0.98), rgba(255, 215, 0, 0.98));
-            color: #1E1E2F;
-            padding: 12px 18px;
-            border-radius: 12px;
-            font-size: 0.9em;
-            font-weight: 600;
-            box-shadow: 0 8px 32px rgba(232, 197, 71, 0.5), 0 0 0 1px rgba(255, 215, 0, 0.3);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            max-width: 280px;
-            font-family: 'Inter', sans-serif;
-            line-height: 1.4;
-        }
-
-        .custom-tooltip.mobile .tooltip-content {
-            padding: 14px 20px;
-            font-size: 0.95em;
-        }
-
-        .tooltip-icon {
-            font-size: 1.3em;
-            flex-shrink: 0;
-        }
-
-        .tooltip-text {
-            flex: 1;
-        }
-
-        .tooltip-close {
-            background: rgba(30, 30, 47, 0.15);
-            border: none;
-            color: #1E1E2F;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            font-size: 1.4em;
-            line-height: 1;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-left: 8px;
-            transition: all 0.2s;
-            flex-shrink: 0;
-        }
-
-        .tooltip-close:hover {
-            background: rgba(30, 30, 47, 0.25);
-            transform: scale(1.1);
-        }
-
-        [data-tooltip] {
-            position: relative;
-        }
-
-        [data-tooltip]::after {
-            content: '';
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            width: 6px;
-            height: 6px;
-            background: #FFD700;
-            border-radius: 50%;
-            opacity: 0.5;
-            animation: tooltipPulse 2s ease-in-out infinite;
-        }
-
-        @keyframes tooltipPulse {
-            0%, 100% { opacity: 0.5; transform: scale(1); }
-            50% { opacity: 1; transform: scale(1.2); }
-        }
-
         @media (max-width: 1024px) {
             .cards-grid {
                 grid-template-columns: 1fr;
@@ -495,75 +370,56 @@
             .feature-card, .team-card {
                 padding: 35px 30px;
             }
-
-            .custom-tooltip {
-                max-width: calc(100vw - 40px);
-            }
-
-            .tooltip-content {
-                font-size: 0.95em;
-                padding: 14px 20px;
-            }
         }
     </style>
 </head>
 <body>
     <div class="bg-particles"></div>
     
-    <div class="lang-selector" data-tooltip="Cambia el idioma de la aplicación">
-        <select id="lang-select" onchange="changeLanguage(this.value)">
-            <option value="en">English</option>
-            <option value="es">Español</option>
-        </select>
-    </div>
-    
     <div class="container">
         <div class="logo-section">
             <h1 class="logo">DROPCHECK</h1>
-            <p class="tagline" data-en="Weather Intelligence Platform" data-es="Plataforma de Inteligencia Meteorológica">Weather Intelligence Platform</p>
-            <p class="subtitle" data-en="Real NASA Data • Advanced Analysis • Smart Forecasting" data-es="Datos Reales de NASA • Análisis Avanzado • Pronóstico Inteligente">Real NASA Data • Advanced Analysis • Smart Forecasting</p>
+            <p class="tagline">Weather Intelligence Platform</p>
+            <p class="subtitle">Real NASA Data • Advanced Analysis • Smart Forecasting</p>
             <span class="nasa-badge">NASA Space Apps Challenge 2025</span>
         </div>
 
         <div class="cards-grid">
-            <!-- Consumer Card -->
-            <a href="consumer.html" class="feature-card" tabindex="0" data-tooltip="Consulta pronósticos en tiempo real para cualquier ciudad del mundo con datos actualizados cada 15 minutos">
+            <a href="consumer.html" class="feature-card" tabindex="0">
                 <span class="card-icon">🌤</span>
-                <h2 class="card-title" data-en="Quick Forecast" data-es="Pronóstico Rápido">Quick Forecast</h2>
-                <p class="card-description" data-en="Real-time weather forecasts powered by Open-Meteo API" data-es="Pronósticos meteorológicos en tiempo real impulsados por Open-Meteo API">
+                <h2 class="card-title">Quick Forecast</h2>
+                <p class="card-description">
                     Real-time weather forecasts powered by Open-Meteo API
                 </p>
                 <ul class="card-features">
-                    <li data-en="24-hour hourly forecast" data-es="Pronóstico por hora de 24 horas">24-hour hourly forecast</li>
-                    <li data-en="7-day outlook" data-es="Perspectiva de 7 días">7-day outlook</li>
-                    <li data-en="Global city search" data-es="Búsqueda de ciudades global">Global city search</li>
-                    <li data-en="Live data updates" data-es="Actualizaciones de datos en vivo">Live data updates</li>
+                    <li>24-hour hourly forecast</li>
+                    <li>7-day outlook</li>
+                    <li>Global city search</li>
+                    <li>Live data updates</li>
                 </ul>
-                <span class="card-button" data-en="Get Forecast →" data-es="Obtener Pronóstico →">Get Forecast →</span>
+                <span class="card-button">Get Forecast →</span>
             </a>
 
-            <!-- Scientific Card -->
-            <a href="scientific.html" class="feature-card" tabindex="0" data-tooltip="Análisis científico profundo con más de 20 años de datos históricos de NASA POWER para estudios climáticos avanzados">
+            <a href="scientific.html" class="feature-card" tabindex="0">
                 <span class="card-icon">📊</span>
-                <h2 class="card-title" data-en="Scientific Analysis" data-es="Análisis Científico">Scientific Analysis</h2>
-                <p class="card-description" data-en="Advanced climate analysis with 20+ years of NASA POWER data" data-es="Análisis climático avanzado con más de 20 años de datos de NASA POWER">
+                <h2 class="card-title">Scientific Analysis</h2>
+                <p class="card-description">
                     Advanced climate analysis with 20+ years of NASA POWER data
                 </p>
                 <ul class="card-features">
-                    <li data-en="Historical data analysis" data-es="Análisis de datos históricos">Historical data analysis</li>
-                    <li data-en="Date range comparison" data-es="Comparación de rangos de fechas">Date range comparison</li>
-                    <li data-en="Polygon area analysis" data-es="Análisis de áreas poligonales">Polygon area analysis</li>
-                    <li data-en="Flood risk assessment" data-es="Evaluación de riesgo de inundaciones">Flood risk assessment</li>
-                    <li data-en="AI-powered insights" data-es="Insights impulsados por IA">AI-powered insights</li>
+                    <li>Historical data analysis</li>
+                    <li>Date range comparison</li>
+                    <li>Polygon area analysis</li>
+                    <li>Flood risk assessment</li>
+                    <li>AI-powered insights</li>
                 </ul>
-                <span class="card-button" data-en="Analyze Data →" data-es="Analizar Datos →">Analyze Data →</span>
+                <span class="card-button">Analyze Data →</span>
             </a>
 
-            <!-- Team Info Card -->
-            <div class="feature-card team-card" tabindex="0" data-tooltip="Conoce al equipo PARAMÁ Legends, ganadores del segundo lugar nacional en 2024 y competidores 2025">
+            <div class="feature-card team-card" tabindex="0">
                 <span class="card-icon">👥</span>
-                <h2 class="card-title" data-en="Our Team" data-es="Nuestro Equipo">Our Team</h2>
-                <p class="card-description" data-en="Building weather intelligence solutions year after year" data-es="Construyendo soluciones de inteligencia meteorológica año tras año">
+                <h2 class="card-title">Our Team</h2>
+                <p class="card-description">
                     Innovating through technology year after year
                 </p>
                 
@@ -586,154 +442,14 @@
         </div>
 
         <div class="footer">
-            <p data-en="100% Real Data • Open Source • Built for Earth" data-es="100% Datos Reales • Código Abierto • Construido para la Tierra">100% Real Data • Open Source • Built for Earth</p>
+            <p>100% Real Data • Open Source • Built for Earth</p>
             <div class="footer-credits">
-                <span data-en="Powered by NASA POWER API & Open-Meteo API" data-es="Impulsado por NASA POWER API & Open-Meteo API">Powered by NASA POWER API & Open-Meteo API</span><br>
+                Powered by NASA POWER API & Open-Meteo API<br>
                 NASA Space Apps Challenge 2025<br>
-                <span data-en="Data sources: NASA POWER (20+ years historical climate data) • Open-Meteo (Real-time weather forecasts)" data-es="Fuentes de datos: NASA POWER (más de 20 años de datos climáticos históricos) • Open-Meteo (Pronósticos meteorológicos en tiempo real)">Data sources: NASA POWER (20+ years historical climate data) • Open-Meteo (Real-time weather forecasts)</span>
+                Data sources: NASA POWER (20+ years historical climate data) • Open-Meteo (Real-time weather forecasts)
             </div>
             <div class="parama-credit">Developed by PARAMÁ Legends</div>
         </div>
     </div>
-
-    <script>
-        function changeLanguage(lang) {
-            document.querySelectorAll('[data-en]').forEach(el => {
-                if (lang === 'en') {
-                    el.textContent = el.getAttribute('data-en');
-                } else if (lang === 'es') {
-                    el.textContent = el.getAttribute('data-es');
-                }
-            });
-            localStorage.setItem('selectedLanguage', lang);
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const savedLang = localStorage.getItem('selectedLanguage') || 'en';
-            document.getElementById('lang-select').value = savedLang;
-            if (savedLang !== 'en') {
-                changeLanguage(savedLang);
-            }
-        });
-
-        // Sistema de Tooltips
-        class TooltipSystem {
-            constructor() {
-                this.activeTooltip = null;
-                this.pressTimer = null;
-                this.init();
-            }
-
-            init() {
-                document.addEventListener('DOMContentLoaded', () => {
-                    this.attachTooltips();
-                });
-            }
-
-            attachTooltips() {
-                const elements = document.querySelectorAll('[data-tooltip]');
-                
-                elements.forEach(el => {
-                    el.addEventListener('mouseenter', (e) => this.showTooltip(el, e));
-                    el.addEventListener('mouseleave', () => this.hideTooltip());
-                    
-                    el.addEventListener('touchstart', (e) => {
-                        this.pressTimer = setTimeout(() => {
-                            this.showTooltip(el, e, true);
-                            navigator.vibrate && navigator.vibrate(50);
-                        }, 500);
-                    });
-                    
-                    el.addEventListener('touchend', () => {
-                        clearTimeout(this.pressTimer);
-                    });
-                    
-                    el.addEventListener('touchmove', () => {
-                        clearTimeout(this.pressTimer);
-                    });
-
-                    el.addEventListener('mousedown', () => {
-                        this.pressTimer = setTimeout(() => {
-                            this.lockTooltip(el);
-                        }, 800);
-                    });
-
-                    el.addEventListener('mouseup', () => {
-                        clearTimeout(this.pressTimer);
-                    });
-                });
-
-                document.addEventListener('click', (e) => {
-                    if (this.activeTooltip && !e.target.closest('[data-tooltip]')) {
-                        this.hideTooltip();
-                    }
-                });
-            }
-
-            showTooltip(element, event, isMobile = false) {
-                const text = element.getAttribute('data-tooltip');
-                if (!text) return;
-
-                this.hideTooltip();
-
-                const tooltip = document.createElement('div');
-                tooltip.className = 'custom-tooltip' + (isMobile ? ' mobile' : '');
-                tooltip.innerHTML = `
-                    <div class="tooltip-content">
-                        <span class="tooltip-icon">ℹ️</span>
-                        <span class="tooltip-text">${text}</span>
-                    </div>
-                `;
-
-                document.body.appendChild(tooltip);
-                this.activeTooltip = tooltip;
-
-                const rect = element.getBoundingClientRect();
-                const tooltipRect = tooltip.getBoundingClientRect();
-                
-                let top = rect.bottom + 10;
-                let left = rect.left + (rect.width / 2) - (tooltipRect.width / 2);
-
-                if (left + tooltipRect.width > window.innerWidth - 20) {
-                    left = window.innerWidth - tooltipRect.width - 20;
-                }
-                if (left < 20) left = 20;
-                
-                if (top + tooltipRect.height > window.innerHeight - 20) {
-                    top = rect.top - tooltipRect.height - 10;
-                }
-
-                tooltip.style.top = top + 'px';
-                tooltip.style.left = left + 'px';
-                
-                setTimeout(() => tooltip.classList.add('show'), 10);
-            }
-
-            lockTooltip(element) {
-                if (this.activeTooltip) {
-                    this.activeTooltip.classList.add('locked');
-                    const closeBtn = document.createElement('button');
-                    closeBtn.className = 'tooltip-close';
-                    closeBtn.innerHTML = '×';
-                    closeBtn.onclick = () => this.hideTooltip();
-                    this.activeTooltip.querySelector('.tooltip-content').appendChild(closeBtn);
-                }
-            }
-
-            hideTooltip() {
-                if (this.activeTooltip) {
-                    this.activeTooltip.classList.remove('show');
-                    setTimeout(() => {
-                        if (this.activeTooltip && this.activeTooltip.parentNode) {
-                            this.activeTooltip.parentNode.removeChild(this.activeTooltip);
-                        }
-                        this.activeTooltip = null;
-                    }, 200);
-                }
-            }
-        }
-
-        new TooltipSystem();
-    </script>
 </body>
 </html>
