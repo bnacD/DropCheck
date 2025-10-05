@@ -37,7 +37,7 @@
                 
                 <div class="mode-selector">
                     <button class="mode-btn active" data-mode="single" title="Single Point Analysis">
-                        🔍 Point
+                        📍 Point
                         <span class="info-icon" data-info="Get current weather for a single location and date using historical NASA data.">ℹ️</span>
                     </button>
                     <button class="mode-btn" data-mode="range" title="Date Range Comparison">
@@ -88,6 +88,24 @@
                         </label>
                         <input type="date" id="end-date">
                     </div>
+                </div>
+                
+                <div class="input-group">
+                    <label>
+                        🔬 Parameter to Analyze
+                        <span class="info-icon" data-info="Select which weather parameter you want to analyze from NASA POWER data.">ℹ️</span>
+                    </label>
+                    <select id="parameter-select">
+                        <option value="T2M">Temperature (2m)</option>
+                        <option value="T2M_MAX">Temperature Max</option>
+                        <option value="T2M_MIN">Temperature Min</option>
+                        <option value="PRECTOTCORR">Precipitation</option>
+                        <option value="WS2M">Wind Speed (2m)</option>
+                        <option value="WS10M">Wind Speed (10m)</option>
+                        <option value="RH2M">Relative Humidity</option>
+                        <option value="PS">Surface Pressure</option>
+                        <option value="ALLSKY_SFC_SW_DWN">Solar Radiation</option>
+                    </select>
                 </div>
                 
                 <button class="btn-analyze" id="analyze-btn">
@@ -182,7 +200,7 @@
                 <p>Click the polygon icon in the map toolbar (top right) to start drawing your area.</p>
             </div>
             <div class="tutorial-slide" data-slide="3">
-                <div class="tutorial-image">📍</div>
+                <div class="tutorial-image">📐</div>
                 <h3>Step 2: Draw Your Area</h3>
                 <p>Click multiple points on the map to create your polygon. Click the first point again to close it.</p>
             </div>

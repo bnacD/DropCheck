@@ -16,6 +16,19 @@ let currentChart = null;
 let comparisonHistory = [];
 let polygonMarkers = [];
 
+// Parameter metadata
+const parameterInfo = {
+    'T2M': { name: 'Temperature (2m)', unit: '°C', decimals: 1 },
+    'T2M_MAX': { name: 'Temperature Max', unit: '°C', decimals: 1 },
+    'T2M_MIN': { name: 'Temperature Min', unit: '°C', decimals: 1 },
+    'PRECTOTCORR': { name: 'Precipitation', unit: 'mm', decimals: 2 },
+    'WS2M': { name: 'Wind Speed (2m)', unit: 'm/s', decimals: 1 },
+    'WS10M': { name: 'Wind Speed (10m)', unit: 'm/s', decimals: 1 },
+    'RH2M': { name: 'Relative Humidity', unit: '%', decimals: 1 },
+    'PS': { name: 'Surface Pressure', unit: 'kPa', decimals: 2 },
+    'ALLSKY_SFC_SW_DWN': { name: 'Solar Radiation', unit: 'kW/m²', decimals: 2 }
+};
+
 const quickLocations = [
     { name: 'Asunción', lat: -25.2637, lon: -57.5759 },
     { name: 'New York', lat: 40.7128, lon: -74.0060 },
@@ -556,18 +569,21 @@ function handleAnalyze() {
     else if (currentMode === 'flood') analyzeFloodRisk();
 }
 
-// Continue to part 2
-
 // ====================================
 // ANALYSIS FUNCTIONS
 // ====================================
 
 async function analyzeSinglePoint() {
     const dateInput = document.getElementById('date-input');
+    const paramSelect = document.getElementById('parameter-select');
+    
     if (!dateInput || !dateInput.value) {
         showNotification('Please select a date', 'error');
         return;
     }
+    
+    const selectedParam = paramSelect ? paramSelect.value : 'T2M';
+    const paramMeta = parameterInfo[selectedParam];
     
     showLoading('Analyzing NASA data...');
     
@@ -583,7 +599,7 @@ async function analyzeSinglePoint() {
         for (let y = currentYear - 20; y < currentYear; y++) {
             const dateStr = y + month + day;
             try {
-                const data = await fetchNASAData('T2M', selectedLat, selectedLon, dateStr, dateStr);
+                const data = await fetchNASAData(selectedParam, selectedLat, selectedLon, dateStr, dateStr);
                 if (data.length > 0) {
                     allYears.push(data[0].value);
                     years.push(y);
@@ -596,7 +612,7 @@ async function analyzeSinglePoint() {
         
         if (allYears.length === 0) throw new Error('No data available for this location and date');
         
-        const stats = calculateStats(allYears);
+        const stats = calculateStats(allYears, paramMeta.decimals);
         
         currentData = {
             type: 'single',
@@ -605,7 +621,10 @@ async function analyzeSinglePoint() {
             years: years,
             location: { lat: selectedLat, lon: selectedLon },
             date: dateInput.value,
-            dataPoints: allYears.length
+            dataPoints: allYears.length,
+            parameter: selectedParam,
+            parameterName: paramMeta.name,
+            unit: paramMeta.unit
         };
         
         saveToHistory(currentData);
@@ -625,11 +644,15 @@ async function analyzeSinglePoint() {
 async function analyzeDateRange() {
     const startInput = document.getElementById('start-date');
     const endInput = document.getElementById('end-date');
+    const paramSelect = document.getElementById('parameter-select');
     
     if (!startInput || !endInput || !startInput.value || !endInput.value) {
         showNotification('Please select date range', 'error');
         return;
     }
+    
+    const selectedParam = paramSelect ? paramSelect.value : 'T2M';
+    const paramMeta = parameterInfo[selectedParam];
     
     showLoading('Analyzing date range...');
     
@@ -657,7 +680,7 @@ async function analyzeDateRange() {
             const endStr = formatDate(yearEnd);
             
             try {
-                const data = await fetchNASAData('T2M', selectedLat, selectedLon, startStr, endStr);
+                const data = await fetchNASAData(selectedParam, selectedLat, selectedLon, startStr, endStr);
                 allData.push(...data);
                 await sleep(200);
             } catch (err) {
@@ -677,7 +700,7 @@ async function analyzeDateRange() {
         });
         
         const results = Object.values(dailyAvg).map(d => {
-            const stats = calculateStats(d.values);
+            const stats = calculateStats(d.values, paramMeta.decimals);
             return {
                 date: d.date,
                 mean: parseFloat(stats.mean),
@@ -691,7 +714,10 @@ async function analyzeDateRange() {
             type: 'range',
             results: results,
             best: results.slice(0, 5),
-            worst: results.slice(-5).reverse()
+            worst: results.slice(-5).reverse(),
+            parameter: selectedParam,
+            parameterName: paramMeta.name,
+            unit: paramMeta.unit
         };
         
         hideLoading();
@@ -707,15 +733,21 @@ async function analyzeDateRange() {
 
 async function analyzePolygon() {
     if (!currentPolygon) {
-        showNotification('Please draw an area first', 'error');
+        showNotification('Please draw an area first',
+            'error');
         return;
     }
     
     const dateInput = document.getElementById('date-input');
+    const paramSelect = document.getElementById('parameter-select');
+    
     if (!dateInput || !dateInput.value) {
         showNotification('Please select a date', 'error');
         return;
     }
+    
+    const selectedParam = paramSelect ? paramSelect.value : 'T2M';
+    const paramMeta = parameterInfo[selectedParam];
     
     showLoading('Analyzing polygon area... This may take a few minutes.');
     clearPolygonMarkers();
@@ -739,7 +771,7 @@ async function analyzePolygon() {
             for (let y = currentYear - 5; y < currentYear; y++) {
                 const dateStr = y + month + day;
                 try {
-                    const data = await fetchNASAData('T2M', point.lat, point.lng, dateStr, dateStr);
+                    const data = await fetchNASAData(selectedParam, point.lat, point.lng, dateStr, dateStr);
                     if (data.length > 0) allYears.push(data[0].value);
                     await sleep(100);
                 } catch (err) {
@@ -748,7 +780,7 @@ async function analyzePolygon() {
             }
             
             if (allYears.length > 0) {
-                const stats = calculateStats(allYears);
+                const stats = calculateStats(allYears, paramMeta.decimals);
                 results.push({
                     lat: parseFloat(point.lat),
                     lng: parseFloat(point.lng),
@@ -773,7 +805,10 @@ async function analyzePolygon() {
             results: results,
             best: sorted.slice(0, 3),
             worst: sorted.slice(-3).reverse(),
-            total: results.length
+            total: results.length,
+            parameter: selectedParam,
+            parameterName: paramMeta.name,
+            unit: paramMeta.unit
         };
         
         hideLoading();
@@ -824,8 +859,8 @@ async function analyzeFloodRisk() {
         
         if (precipData.length === 0) throw new Error('No data available for flood analysis');
         
-        const precipStats = calculateStats(precipData);
-        const humidityStats = calculateStats(humidityData);
+        const precipStats = calculateStats(precipData, 2);
+        const humidityStats = calculateStats(humidityData, 1);
         
         const avgPrecip = parseFloat(precipStats.mean);
         const avgHumidity = parseFloat(humidityStats.mean);
@@ -922,13 +957,13 @@ function visualizePolygon(results) {
             color: '#fff',
             weight: 2,
             fillOpacity: 0.8
-        }).addTo(map).bindPopup(`Temp: ${result.mean.toFixed(1)}°C`);
+        }).addTo(map).bindPopup(`Value: ${result.mean.toFixed(1)} ${currentData.unit}`);
         
         polygonMarkers.push(marker);
     });
 }
 
-function calculateStats(values) {
+function calculateStats(values, decimals = 1) {
     const sorted = values.slice().sort((a, b) => a - b);
     const sum = values.reduce((a, b) => a + b, 0);
     const mean = sum / values.length;
@@ -937,11 +972,11 @@ function calculateStats(values) {
     const std = Math.sqrt(variance);
     
     return {
-        mean: mean.toFixed(1),
-        median: sorted[Math.floor(sorted.length / 2)].toFixed(1),
-        std: std.toFixed(2),
-        min: sorted[0].toFixed(1),
-        max: sorted[sorted.length - 1].toFixed(1)
+        mean: mean.toFixed(decimals),
+        median: sorted[Math.floor(sorted.length / 2)].toFixed(decimals),
+        std: std.toFixed(decimals),
+        min: sorted[0].toFixed(decimals),
+        max: sorted[sorted.length - 1].toFixed(decimals)
     };
 }
 
@@ -991,24 +1026,27 @@ function showExportButtons() {
 
 function displaySingleResults() {
     const stats = currentData.stats;
+    const unit = currentData.unit || '°C';
+    const paramName = currentData.parameterName || 'Temperature';
+    
     const html = `
         <div class="result-card">
-            <h3 style="color: #00C4FF; margin-bottom: 20px;">Single Point Analysis</h3>
+            <h3 style="color: #00C4FF; margin-bottom: 20px;">Single Point Analysis - ${paramName}</h3>
             <div class="result-grid">
                 <div class="metric-box">
                     <div class="metric-label">Average</div>
                     <div class="metric-value">${stats.mean}</div>
-                    <div class="metric-unit">°C</div>
+                    <div class="metric-unit">${unit}</div>
                 </div>
                 <div class="metric-box">
                     <div class="metric-label">Minimum</div>
                     <div class="metric-value">${stats.min}</div>
-                    <div class="metric-unit">°C</div>
+                    <div class="metric-unit">${unit}</div>
                 </div>
                 <div class="metric-box">
                     <div class="metric-label">Maximum</div>
                     <div class="metric-value">${stats.max}</div>
-                    <div class="metric-unit">°C</div>
+                    <div class="metric-unit">${unit}</div>
                 </div>
                 <div class="metric-box">
                     <div class="metric-label">Std Dev</div>
@@ -1027,13 +1065,16 @@ function displaySingleResults() {
 }
 
 function displayRangeResults() {
+    const unit = currentData.unit || '°C';
+    const paramName = currentData.parameterName || 'Temperature';
+    
     let bestHtml = '';
     currentData.best.forEach((d, i) => {
         bestHtml += `
             <div class="metric-box">
                 <div class="metric-label">#${i + 1} - ${d.date}</div>
                 <div class="metric-value">${d.mean.toFixed(1)}</div>
-                <div class="metric-unit">°C</div>
+                <div class="metric-unit">${unit}</div>
             </div>
         `;
     });
@@ -1044,17 +1085,17 @@ function displayRangeResults() {
             <div class="metric-box" style="border-color: rgba(239, 68, 68, 0.3);">
                 <div class="metric-label">#${i + 1} - ${d.date}</div>
                 <div class="metric-value">${d.mean.toFixed(1)}</div>
-                <div class="metric-unit">°C</div>
+                <div class="metric-unit">${unit}</div>
             </div>
         `;
     });
     
     const html = `
         <div class="result-card">
-            <h3 style="color: #00C4FF; margin-bottom: 20px;">Date Range Analysis</h3>
-            <h4 style="color: #10b981; margin-bottom: 15px;">Best Dates (Lowest Temperature)</h4>
+            <h3 style="color: #00C4FF; margin-bottom: 20px;">Date Range Analysis - ${paramName}</h3>
+            <h4 style="color: #10b981; margin-bottom: 15px;">Best Dates (Lowest Values)</h4>
             <div class="result-grid">${bestHtml}</div>
-            <h4 style="color: #ef4444; margin: 30px 0 15px 0;">Worst Dates (Highest Temperature)</h4>
+            <h4 style="color: #ef4444; margin: 30px 0 15px 0;">Worst Dates (Highest Values)</h4>
             <div class="result-grid">${worstHtml}</div>
         </div>
     `;
@@ -1063,13 +1104,16 @@ function displayRangeResults() {
 }
 
 function displayPolygonResults() {
+    const unit = currentData.unit || '°C';
+    const paramName = currentData.parameterName || 'Temperature';
+    
     let bestHtml = '';
     currentData.best.forEach((loc, i) => {
         bestHtml += `
             <div class="metric-box">
                 <div class="metric-label">#${i + 1} Best</div>
                 <div class="metric-value">${loc.mean.toFixed(1)}</div>
-                <div class="metric-unit">°C</div>
+                <div class="metric-unit">${unit}</div>
                 <div style="font-size: 0.75em; margin-top: 8px;">${loc.lat}, ${loc.lng}</div>
             </div>
         `;
@@ -1081,7 +1125,7 @@ function displayPolygonResults() {
             <div class="metric-box" style="border-color: rgba(239, 68, 68, 0.3);">
                 <div class="metric-label">#${i + 1} Worst</div>
                 <div class="metric-value">${loc.mean.toFixed(1)}</div>
-                <div class="metric-unit">°C</div>
+                <div class="metric-unit">${unit}</div>
                 <div style="font-size: 0.75em; margin-top: 8px;">${loc.lat}, ${loc.lng}</div>
             </div>
         `;
@@ -1089,7 +1133,7 @@ function displayPolygonResults() {
     
     const html = `
         <div class="result-card">
-            <h3 style="color: #00C4FF; margin-bottom: 20px;">Polygon Area Analysis</h3>
+            <h3 style="color: #00C4FF; margin-bottom: 20px;">Polygon Area Analysis - ${paramName}</h3>
             <h4 style="color: #10b981; margin-bottom: 15px;">Best Locations</h4>
             <div class="result-grid">${bestHtml}</div>
             <h4 style="color: #ef4444; margin: 30px 0 15px 0;">Worst Locations</h4>
@@ -1134,9 +1178,12 @@ function displayFloodResults() {
 function createChart(years, values) {
     if (typeof Chart === 'undefined') return;
     
+    const unit = currentData.unit || '°C';
+    const paramName = currentData.parameterName || 'Temperature';
+    
     const html = `
         <div class="chart-container">
-            <h3 style="color: #00C4FF; margin-bottom: 18px;">Historical Temperature Trend</h3>
+            <h3 style="color: #00C4FF; margin-bottom: 18px;">Historical ${paramName} Trend</h3>
             <canvas id="hist-chart"></canvas>
         </div>
     `;
@@ -1158,7 +1205,7 @@ function createChart(years, values) {
         data: {
             labels: years,
             datasets: [{
-                label: 'Temperature (°C)',
+                label: `${paramName} (${unit})`,
                 data: values,
                 borderColor: '#00C4FF',
                 backgroundColor: 'rgba(0, 196, 255, 0.1)',
@@ -1184,7 +1231,7 @@ function createChart(years, values) {
                 y: {
                     ticks: {
                         color: '#1E1E2F',
-                        callback: value => value + '°C'
+                        callback: value => value + ' ' + unit
                     },
                     grid: { color: 'rgba(0, 196, 255, 0.1)' }
                 },
@@ -1205,20 +1252,22 @@ function exportToCSV() {
     }
     
     let csv = '';
+    const paramName = currentData.parameterName || 'Temperature';
+    const unit = currentData.unit || '°C';
     
     if (currentData.type === 'single') {
-        csv = 'Year,Temperature (°C)\n';
+        csv = `Year,${paramName} (${unit})\n`;
         currentData.years.forEach((year, i) => {
             csv += `${year},${currentData.values[i]}\n`;
         });
         csv += `\nStatistics\nAverage,${currentData.stats.mean}\nMinimum,${currentData.stats.min}\nMaximum,${currentData.stats.max}\nStd Dev,${currentData.stats.std}`;
     } else if (currentData.type === 'range') {
-        csv = 'Date,Mean Temp (°C),Min Temp (°C),Max Temp (°C)\n';
+        csv = `Date,Mean (${unit}),Min (${unit}),Max (${unit})\n`;
         currentData.results.forEach(r => {
             csv += `${r.date},${r.mean},${r.min},${r.max}\n`;
         });
     } else if (currentData.type === 'polygon') {
-        csv = 'Latitude,Longitude,Mean Temp (°C),Min Temp (°C),Max Temp (°C)\n';
+        csv = `Latitude,Longitude,Mean (${unit}),Min (${unit}),Max (${unit})\n`;
         currentData.results.forEach(r => {
             csv += `${r.lat},${r.lng},${r.mean},${r.min},${r.max}\n`;
         });
@@ -1265,6 +1314,9 @@ function saveToHistory(data) {
         date: data.date,
         location: data.location,
         stats: data.stats,
+        parameter: data.parameter,
+        parameterName: data.parameterName,
+        unit: data.unit,
         timestamp: Date.now()
     };
     
@@ -1313,7 +1365,7 @@ function showComparisonModal() {
     `;
     
     let html = '<div style="background: white; padding: 40px; border-radius: 20px; max-width: 800px; max-height: 80vh; overflow-y: auto;">';
-    html += '<h2 style="color: #00C4FF; margin-bottom: 20px; font-family: Orbitron, sans-serif;">Date Comparison History</h2>';
+    html += '<h2 style="color: #00C4FF; margin-bottom: 20px; font-family: Orbitron, sans-serif;">Comparison History</h2>';
     html += '<div style="display: grid; gap: 15px;">';
     
     comparisonHistory.forEach((entry, i) => {
@@ -1321,12 +1373,12 @@ function showComparisonModal() {
         html += `
             <div style="background: rgba(0, 196, 255, 0.1); padding: 20px; border-radius: 12px; border: 2px solid rgba(0, 196, 255, 0.3);">
                 <div style="color: #1E1E2F; font-weight: 700; margin-bottom: 10px;">
-                    ${entry.date} - ${entry.location.lat}, ${entry.location.lon}
+                    ${entry.parameterName || 'Temperature'} - ${entry.date} - ${entry.location.lat}, ${entry.location.lon}
                 </div>
                 <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; font-size: 0.9em;">
-                    <div><strong>Avg:</strong> ${entry.stats.mean}°C</div>
-                    <div><strong>Min:</strong> ${entry.stats.min}°C</div>
-                    <div><strong>Max:</strong> ${entry.stats.max}°C</div>
+                    <div><strong>Avg:</strong> ${entry.stats.mean}${entry.unit || '°C'}</div>
+                    <div><strong>Min:</strong> ${entry.stats.min}${entry.unit || '°C'}</div>
+                    <div><strong>Max:</strong> ${entry.stats.max}${entry.unit || '°C'}</div>
                     <div><strong>Std:</strong> ${entry.stats.std}</div>
                 </div>
                 <div style="font-size: 0.8em; color: rgba(30, 30, 47, 0.6); margin-top: 8px;">Analyzed: ${date}</div>
