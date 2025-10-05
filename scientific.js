@@ -1,5 +1,5 @@
 // ====================================
-// DROPCHECK SCIENTIFIC - FIXED VERSION
+// DROPCHECK SCIENTIFIC - ENHANCED VERSION
 // ====================================
 
 const NASA_API_BASE = 'https://power.larc.nasa.gov/api/temporal/daily/point';
@@ -14,6 +14,7 @@ let currentMode = 'single';
 let currentData = null;
 let currentChart = null;
 let comparisonHistory = [];
+let polygonMarkers = [];
 
 const quickLocations = [
     { name: 'Asunción', lat: -25.2637, lon: -57.5759 },
@@ -23,6 +24,38 @@ const quickLocations = [
     { name: 'Sydney', lat: -33.8688, lon: 151.2093 },
     { name: 'London', lat: 51.5074, lon: -0.1278 }
 ];
+
+// Chatbot questions by mode
+const chatbotQuestions = {
+    single: [
+        'Will it rain today?',
+        'Should I bring a coat?',
+        'Is there high UV radiation?',
+        'Will it be windy?',
+        'What is the temperature trend?'
+    ],
+    range: [
+        'Which is the best date for an outdoor event?',
+        'Which dates have least rain?',
+        'Which days have optimal temperature?',
+        'When should I avoid outdoor activities?',
+        'What is the weather pattern?'
+    ],
+    polygon: [
+        'Which area is best to relax?',
+        'Which zones have lowest wind?',
+        'Which region has ideal temperature?',
+        'Where should I avoid?',
+        'What are the best locations?'
+    ],
+    flood: [
+        'What is the flood risk level?',
+        'Should I be concerned?',
+        'What precautions should I take?',
+        'Is this area safe?',
+        'What does the data show?'
+    ]
+};
 
 // Initialize on DOM ready
 document.addEventListener('DOMContentLoaded', function() {
@@ -47,6 +80,8 @@ function initializeApp() {
         setDefaultDates();
         setupEventListeners();
         loadComparisonHistory();
+        setupChatbot();
+        checkFirstTimePolygon();
         
         console.log('✅ App initialized successfully');
     } catch (error) {
@@ -120,11 +155,13 @@ function initializeMap() {
                 drawnItems.clearLayers();
                 drawnItems.addLayer(event.layer);
                 currentPolygon = event.layer;
+                clearPolygonMarkers();
                 showNotification('Area created! Ready to analyze.', 'success');
             });
             
             map.on(L.Draw.Event.DELETED, function() {
                 currentPolygon = null;
+                clearPolygonMarkers();
             });
         }
         
@@ -158,6 +195,13 @@ function initializeMap() {
         console.error('Map creation error:', error);
         showNotification('Failed to create map: ' + error.message, 'error');
     }
+}
+
+function clearPolygonMarkers() {
+    polygonMarkers.forEach(m => {
+        if (map) map.removeLayer(m);
+    });
+    polygonMarkers = [];
 }
 
 function initializeQuickLocations() {
@@ -203,36 +247,20 @@ function setupEventListeners() {
             this.classList.add('active');
             currentMode = this.getAttribute('data-mode');
             updateDateContainers(currentMode);
+            updateChatbotQuestions(currentMode);
         });
     });
     
-    const aiToggle = document.getElementById('ai-toggle');
-    const aiClose = document.getElementById('ai-close');
-    const aiChat = document.getElementById('ai-chat');
+    // Export buttons
+    const exportCSV = document.getElementById('export-csv');
+    const exportJSON = document.getElementById('export-json');
     
-    if (aiToggle && aiChat) {
-        aiToggle.addEventListener('click', function() {
-            aiChat.style.display = aiChat.style.display === 'none' ? 'flex' : 'none';
-        });
+    if (exportCSV) {
+        exportCSV.addEventListener('click', exportToCSV);
     }
     
-    if (aiClose && aiChat) {
-        aiClose.addEventListener('click', function() {
-            aiChat.style.display = 'none';
-        });
-    }
-    
-    const aiInput = document.getElementById('ai-input');
-    const aiSend = document.getElementById('ai-send');
-    
-    if (aiInput && aiSend) {
-        aiSend.addEventListener('click', handleAIQuery);
-        aiInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleAIQuery();
-            }
-        });
+    if (exportJSON) {
+        exportJSON.addEventListener('click', exportToJSON);
     }
     
     const compareBtn = document.getElementById('compare-btn');
@@ -266,10 +294,245 @@ function setDefaultDates() {
     }
 }
 
+// CHATBOT SETUP
+function setupChatbot() {
+    const chatbotToggle = document.getElementById('chatbot-toggle');
+    const chatbotClose = document.getElementById('chatbot-close');
+    const chatbotWindow = document.getElementById('chatbot-window');
+    
+    if (chatbotToggle && chatbotWindow) {
+        chatbotToggle.addEventListener('click', function() {
+            chatbotWindow.style.display = chatbotWindow.style.display === 'none' ? 'flex' : 'none';
+        });
+    }
+    
+    if (chatbotClose && chatbotWindow) {
+        chatbotClose.addEventListener('click', function() {
+            chatbotWindow.style.display = 'none';
+        });
+    }
+    
+    updateChatbotQuestions('single');
+}
+
+function updateChatbotQuestions(mode) {
+    const container = document.getElementById('chatbot-questions');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    const questions = chatbotQuestions[mode] || chatbotQuestions.single;
+    
+    questions.forEach(question => {
+        const btn = document.createElement('button');
+        btn.className = 'chatbot-question-btn';
+        btn.textContent = question;
+        btn.addEventListener('click', () => handleChatbotQuestion(question));
+        container.appendChild(btn);
+    });
+}
+
+function handleChatbotQuestion(question) {
+    const messages = document.getElementById('chatbot-messages');
+    if (!messages) return;
+    
+    // Add user message
+    const userMsg = document.createElement('div');
+    userMsg.className = 'chatbot-message chatbot-message-user';
+    userMsg.innerHTML = `
+        <div class="chatbot-avatar">👤</div>
+        <div class="chatbot-bubble">${question}</div>
+    `;
+    messages.appendChild(userMsg);
+    
+    // Generate response
+    setTimeout(() => {
+        const response = generateChatbotResponse(question);
+        const botMsg = document.createElement('div');
+        botMsg.className = 'chatbot-message';
+        botMsg.innerHTML = `
+            <div class="chatbot-avatar">🤖</div>
+            <div class="chatbot-bubble"><p>${response}</p></div>
+        `;
+        messages.appendChild(botMsg);
+        messages.scrollTop = messages.scrollHeight;
+    }, 800);
+}
+
+function generateChatbotResponse(question) {
+    if (!currentData) {
+        return 'Please run an analysis first so I can help you interpret the data. Select a mode, location, and date, then click "Analyze with NASA Data".';
+    }
+    
+    const q = question.toLowerCase();
+    
+    if (currentData.type === 'single') {
+        if (q.includes('rain')) {
+            return `Based on historical data, the average precipitation for this date is typically low. However, I recommend checking the real-time forecast for more accurate information.`;
+        } else if (q.includes('coat') || q.includes('temperature')) {
+            return `The historical average temperature is ${currentData.stats.mean}°C, ranging from ${currentData.stats.min}°C to ${currentData.stats.max}°C. Based on this data, you should dress accordingly for moderate temperatures.`;
+        } else if (q.includes('uv') || q.includes('radiation')) {
+            return `UV radiation data is not included in this analysis. I recommend checking local weather services for UV index information.`;
+        } else if (q.includes('wind')) {
+            return `Wind data is not included in this basic temperature analysis. For wind information, please use the forecast page or check local weather services.`;
+        } else if (q.includes('trend')) {
+            return `Over the past ${currentData.dataPoints} years, the temperature for this date has shown a standard deviation of ${currentData.stats.std}, indicating ${parseFloat(currentData.stats.std) < 3 ? 'consistent' : 'variable'} temperature patterns.`;
+        }
+    } else if (currentData.type === 'range') {
+        if (q.includes('best date') || q.includes('outdoor event')) {
+            return `Based on the analysis, the best date is ${currentData.best[0].date} with an average temperature of ${currentData.best[0].mean.toFixed(1)}°C. This date has historically shown the most favorable conditions.`;
+        } else if (q.includes('least rain') || q.includes('rain')) {
+            return `The dates with typically lower precipitation are ${currentData.best.slice(0, 3).map(d => d.date).join(', ')}. These dates have historically shown better weather conditions.`;
+        } else if (q.includes('optimal temperature')) {
+            return `The top 3 dates with optimal temperatures are: ${currentData.best.slice(0, 3).map((d, i) => `${i + 1}. ${d.date} (${d.mean.toFixed(1)}°C)`).join(', ')}.`;
+        } else if (q.includes('avoid')) {
+            return `I recommend avoiding ${currentData.worst[0].date} which has an average temperature of ${currentData.worst[0].mean.toFixed(1)}°C, historically the least favorable in your selected range.`;
+        } else if (q.includes('pattern')) {
+            return `The analysis shows ${currentData.results.length} days analyzed. The temperature range varies from ${Math.min(...currentData.results.map(r => r.mean)).toFixed(1)}°C to ${Math.max(...currentData.results.map(r => r.mean)).toFixed(1)}°C across the period.`;
+        }
+    } else if (currentData.type === 'polygon') {
+        if (q.includes('best') || q.includes('relax')) {
+            return `The optimal location is at coordinates ${currentData.best[0].lat}, ${currentData.best[0].lng} with an average temperature of ${currentData.best[0].mean.toFixed(1)}°C. This area shows the most favorable conditions.`;
+        } else if (q.includes('wind') || q.includes('lowest wind')) {
+            return `Wind-specific data is not included in this temperature analysis. The analysis shows temperature variations across ${currentData.total} points in your selected area.`;
+        } else if (q.includes('ideal temperature') || q.includes('region')) {
+            return `The top 3 locations with ideal temperatures are: ${currentData.best.slice(0, 3).map((loc, i) => `${i + 1}. (${loc.lat}, ${loc.lng}) at ${loc.mean.toFixed(1)}°C`).join('; ')}.`;
+        } else if (q.includes('avoid')) {
+            return `I recommend avoiding the area at ${currentData.worst[0].lat}, ${currentData.worst[0].lng} which has an average temperature of ${currentData.worst[0].mean.toFixed(1)}°C, the least favorable in your polygon.`;
+        } else if (q.includes('locations')) {
+            return `Out of ${currentData.total} analyzed points, the best 3 zones are marked in green on the map, and the worst 3 in red. Check the results panel for detailed coordinates and temperatures.`;
+        }
+    } else if (currentData.type === 'flood') {
+        if (q.includes('risk level')) {
+            return `The flood risk level is ${currentData.riskLevel} (${currentData.riskPercent}% probability) based on historical precipitation of ${currentData.precipStats.mean}mm and humidity of ${currentData.humidityStats.mean}%.`;
+        } else if (q.includes('concerned')) {
+            if (currentData.riskLevel === 'High') {
+                return `Yes, with a ${currentData.riskLevel} risk level (${currentData.riskPercent}%), you should be prepared for potential flooding. Monitor local weather alerts closely.`;
+            } else if (currentData.riskLevel === 'Medium') {
+                return `There is a moderate risk (${currentData.riskPercent}%). Stay informed about weather conditions and have a basic emergency plan ready.`;
+            } else {
+                return `The risk is ${currentData.riskLevel} (${currentData.riskPercent}%), so flooding is unlikely based on historical data. However, always stay alert to current weather conditions.`;
+            }
+        } else if (q.includes('precautions')) {
+            return `With ${currentData.riskLevel} risk: ${currentData.riskLevel === 'High' ? 'Prepare emergency supplies, know evacuation routes, and monitor weather alerts continuously.' : currentData.riskLevel === 'Medium' ? 'Stay informed, avoid low-lying areas during heavy rain, and keep emergency contacts ready.' : 'Continue normal activities but stay aware of weather forecasts.'}`;
+        } else if (q.includes('safe')) {
+            return `Based on historical data showing ${currentData.riskLevel} risk (${currentData.riskPercent}%), this area ${currentData.riskLevel === 'Low' ? 'is generally safe' : currentData.riskLevel === 'Medium' ? 'requires moderate caution' : 'requires high vigilance'} regarding flood potential.`;
+        } else if (q.includes('data show')) {
+            return `The data shows average precipitation of ${currentData.precipStats.mean}mm (range: ${currentData.precipStats.min}-${currentData.precipStats.max}mm) and humidity of ${currentData.humidityStats.mean}% over the analyzed period, resulting in a ${currentData.riskLevel} flood risk assessment.`;
+        }
+    }
+    
+    return `I've analyzed the data for ${currentData.type} mode. The results show interesting patterns. Would you like me to explain any specific aspect of the analysis?`;
+}
+
+// POLYGON TUTORIAL
+function checkFirstTimePolygon() {
+    const hasSeenTutorial = localStorage.getItem('polygonTutorialSeen');
+    if (!hasSeenTutorial) {
+        // Don't show automatically, but mark it for when user clicks polygon mode
+        localStorage.setItem('polygonTutorialReady', 'true');
+    }
+}
+
+function showPolygonTutorial() {
+    const overlay = document.getElementById('tutorial-overlay');
+    if (!overlay) return;
+    
+    overlay.style.display = 'flex';
+    setupTutorialNavigation();
+    localStorage.setItem('polygonTutorialSeen', 'true');
+    localStorage.removeItem('polygonTutorialReady');
+}
+
+function setupTutorialNavigation() {
+    const slides = document.querySelectorAll('.tutorial-slide');
+    const dotsContainer = document.getElementById('tutorial-dots');
+    const prevBtn = document.getElementById('tutorial-prev');
+    const nextBtn = document.getElementById('tutorial-next');
+    const finishBtn = document.getElementById('tutorial-finish');
+    const skipBtn = document.getElementById('tutorial-skip');
+    const closeBtn = document.getElementById('tutorial-close');
+    const overlay = document.getElementById('tutorial-overlay');
+    
+    let currentSlide = 0;
+    
+    // Create dots
+    if (dotsContainer) {
+        dotsContainer.innerHTML = '';
+        slides.forEach((_, index) => {
+            const dot = document.createElement('div');
+            dot.className = 'tutorial-dot' + (index === 0 ? ' active' : '');
+            dot.addEventListener('click', () => goToSlide(index));
+            dotsContainer.appendChild(dot);
+        });
+    }
+    
+    function goToSlide(index) {
+        slides.forEach(s => s.classList.remove('active'));
+        slides[index].classList.add('active');
+        
+        const dots = dotsContainer.querySelectorAll('.tutorial-dot');
+        dots.forEach(d => d.classList.remove('active'));
+        dots[index].classList.add('active');
+        
+        currentSlide = index;
+        
+        if (prevBtn) prevBtn.style.display = index === 0 ? 'none' : 'block';
+        if (nextBtn) nextBtn.style.display = index === slides.length - 1 ? 'none' : 'block';
+        if (finishBtn) finishBtn.style.display = index === slides.length - 1 ? 'block' : 'none';
+    }
+    
+    if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+            if (currentSlide > 0) goToSlide(currentSlide - 1);
+        });
+    }
+    
+    if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+            if (currentSlide < slides.length - 1) goToSlide(currentSlide + 1);
+        });
+    }
+    
+    if (finishBtn) {
+        finishBtn.addEventListener('click', () => {
+            overlay.style.display = 'none';
+        });
+    }
+    
+    if (skipBtn) {
+        skipBtn.addEventListener('click', () => {
+            overlay.style.display = 'none';
+        });
+    }
+    
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            overlay.style.display = 'none';
+        });
+    }
+    
+    goToSlide(0);
+}
+
+// Add tutorial trigger when polygon mode is selected
+document.addEventListener('DOMContentLoaded', function() {
+    const polygonBtn = document.querySelector('[data-mode="polygon"]');
+    if (polygonBtn) {
+        polygonBtn.addEventListener('click', function() {
+            const tutorialReady = localStorage.getItem('polygonTutorialReady');
+            const tutorialSeen = localStorage.getItem('polygonTutorialSeen');
+            
+            if (tutorialReady && !tutorialSeen) {
+                setTimeout(() => showPolygonTutorial(), 500);
+            }
+        });
+    }
+});
+
 function showNotification(message, type) {
     const notification = document.createElement('div');
     notification.style.cssText = `
-        position: fixed; top: 20px; right: 20px; padding: 15px 20px;
+        position: fixed; top: 80px; right: 20px; padding: 15px 20px;
         background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6'};
         color: white; border-radius: 8px; z-index: 10000;
         box-shadow: 0 4px 12px rgba(0,0,0,0.2); font-weight: 600;
@@ -292,6 +555,12 @@ function handleAnalyze() {
     else if (currentMode === 'polygon') analyzePolygon();
     else if (currentMode === 'flood') analyzeFloodRisk();
 }
+
+// Continue to part 2
+
+// ====================================
+// ANALYSIS FUNCTIONS
+// ====================================
 
 async function analyzeSinglePoint() {
     const dateInput = document.getElementById('date-input');
@@ -325,7 +594,7 @@ async function analyzeSinglePoint() {
             }
         }
         
-        if (allYears.length === 0) throw new Error('No data available');
+        if (allYears.length === 0) throw new Error('No data available for this location and date');
         
         const stats = calculateStats(allYears);
         
@@ -344,6 +613,7 @@ async function analyzeSinglePoint() {
         hideLoading();
         displaySingleResults();
         createChart(years, allYears);
+        showExportButtons();
         showNotification('Analysis complete!', 'success');
         
     } catch (error) {
@@ -395,7 +665,7 @@ async function analyzeDateRange() {
             }
         }
         
-        if (allData.length === 0) throw new Error('No data available');
+        if (allData.length === 0) throw new Error('No data available for this date range');
         
         const dailyAvg = {};
         allData.forEach(item => {
@@ -426,6 +696,7 @@ async function analyzeDateRange() {
         
         hideLoading();
         displayRangeResults();
+        showExportButtons();
         showNotification('Analysis complete!', 'success');
         
     } catch (error) {
@@ -433,6 +704,7 @@ async function analyzeDateRange() {
         showNotification('Error: ' + error.message, 'error');
     }
 }
+
 async function analyzePolygon() {
     if (!currentPolygon) {
         showNotification('Please draw an area first', 'error');
@@ -445,7 +717,8 @@ async function analyzePolygon() {
         return;
     }
     
-    showLoading('Analyzing polygon area...');
+    showLoading('Analyzing polygon area... This may take a few minutes.');
+    clearPolygonMarkers();
     
     try {
         const bounds = currentPolygon.getBounds();
@@ -457,6 +730,7 @@ async function analyzePolygon() {
         const day = String(dateObj.getDate()).padStart(2, '0');
         
         const results = [];
+        let processed = 0;
         
         for (let i = 0; i < points.length; i++) {
             const point = points[i];
@@ -485,10 +759,12 @@ async function analyzePolygon() {
                 });
             }
             
+            processed++;
+            updateLoadingProgress(processed, points.length);
             await sleep(200);
         }
         
-        if (results.length === 0) throw new Error('No data available');
+        if (results.length === 0) throw new Error('No data available for this area');
         
         const sorted = results.slice().sort((a, b) => a.mean - b.mean);
         
@@ -503,6 +779,7 @@ async function analyzePolygon() {
         hideLoading();
         displayPolygonResults();
         visualizePolygon(results);
+        showExportButtons();
         showNotification('Analysis complete!', 'success');
         
     } catch (error) {
@@ -545,7 +822,7 @@ async function analyzeFloodRisk() {
             }
         }
         
-        if (precipData.length === 0) throw new Error('No data available');
+        if (precipData.length === 0) throw new Error('No data available for flood analysis');
         
         const precipStats = calculateStats(precipData);
         const humidityStats = calculateStats(humidityData);
@@ -576,6 +853,7 @@ async function analyzeFloodRisk() {
         
         hideLoading();
         displayFloodResults();
+        showExportButtons();
         showNotification('Analysis complete!', 'success');
         
     } catch (error) {
@@ -584,6 +862,7 @@ async function analyzeFloodRisk() {
     }
 }
 
+// HELPER FUNCTIONS
 async function fetchNASAData(param, lat, lon, startDate, endDate) {
     const url = `${NASA_API_BASE}?parameters=${param}&community=RE&longitude=${lon}&latitude=${lat}&start=${startDate}&end=${endDate}&format=JSON`;
     
@@ -634,16 +913,18 @@ function visualizePolygon(results) {
     const max = Math.max(...values);
     
     results.forEach(result => {
-        const norm = (result.mean - min) / (max - min);
+        const norm = (result.mean - min) / (max - min || 1);
         const color = norm < 0.33 ? '#10b981' : norm < 0.66 ? '#f59e0b' : '#ef4444';
         
-        L.circleMarker([result.lat, result.lng], {
+        const marker = L.circleMarker([result.lat, result.lng], {
             radius: 8,
             fillColor: color,
             color: '#fff',
             weight: 2,
             fillOpacity: 0.8
         }).addTo(map).bindPopup(`Temp: ${result.mean.toFixed(1)}°C`);
+        
+        polygonMarkers.push(marker);
     });
 }
 
@@ -675,92 +956,18 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function saveToHistory(data) {
-    if (data.type !== 'single') return;
-    
-    const entry = {
-        date: data.date,
-        location: data.location,
-        stats: data.stats,
-        timestamp: Date.now()
-    };
-    
-    comparisonHistory.unshift(entry);
-    if (comparisonHistory.length > 10) comparisonHistory.pop();
-    
-    try {
-        localStorage.setItem('scientificHistory', JSON.stringify(comparisonHistory));
-    } catch (e) {
-        console.warn('Failed to save history');
-    }
-    
-    const compareBtn = document.getElementById('compare-btn');
-    if (compareBtn && comparisonHistory.length > 0) {
-        compareBtn.style.display = 'block';
-    }
-}
-
-function loadComparisonHistory() {
-    try {
-        const stored = localStorage.getItem('scientificHistory');
-        if (stored) {
-            comparisonHistory = JSON.parse(stored);
-            const compareBtn = document.getElementById('compare-btn');
-            if (compareBtn && comparisonHistory.length > 0) {
-                compareBtn.style.display = 'block';
-            }
+function updateLoadingProgress(current, total) {
+    const container = document.getElementById('results-container');
+    if (container) {
+        const percent = Math.round((current / total) * 100);
+        const loadingText = container.querySelector('.loading-text');
+        if (loadingText) {
+            loadingText.textContent = `Analyzing polygon area... ${percent}% (${current}/${total} points)`;
         }
-    } catch (e) {
-        console.warn('Failed to load history');
     }
 }
 
-function showComparisonModal() {
-    if (comparisonHistory.length < 2) {
-        showNotification('Need at least 2 analyses to compare', 'error');
-        return;
-    }
-    
-    const modal = document.createElement('div');
-    modal.style.cssText = `
-        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-        background: rgba(0,0,0,0.8); z-index: 10000;
-        display: flex; align-items: center; justify-content: center;
-        padding: 20px;
-    `;
-    
-    let html = '<div style="background: white; padding: 40px; border-radius: 20px; max-width: 800px; max-height: 80vh; overflow-y: auto;">';
-    html += '<h2 style="color: #00C4FF; margin-bottom: 20px; font-family: Orbitron, sans-serif;">Date Comparison History</h2>';
-    html += '<div style="display: grid; gap: 15px;">';
-    
-    comparisonHistory.forEach((entry, i) => {
-        const date = new Date(entry.timestamp).toLocaleDateString();
-        html += `
-            <div style="background: rgba(0, 196, 255, 0.1); padding: 20px; border-radius: 12px; border: 2px solid rgba(0, 196, 255, 0.3);">
-                <div style="color: #1E1E2F; font-weight: 700; margin-bottom: 10px;">
-                    ${entry.date} - ${entry.location.lat}, ${entry.location.lon}
-                </div>
-                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; font-size: 0.9em;">
-                    <div><strong>Avg:</strong> ${entry.stats.mean}°C</div>
-                    <div><strong>Min:</strong> ${entry.stats.min}°C</div>
-                    <div><strong>Max:</strong> ${entry.stats.max}°C</div>
-                    <div><strong>Std:</strong> ${entry.stats.std}</div>
-                </div>
-                <div style="font-size: 0.8em; color: rgba(30, 30, 47, 0.6); margin-top: 8px;">Analyzed: ${date}</div>
-            </div>
-        `;
-    });
-    
-    html += '</div>';
-    html += '<button onclick="this.closest(\'.comparison-modal\').remove()" style="margin-top: 20px; background: #00C4FF; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 700;">Close</button>';
-    html += '</div>';
-    
-    modal.className = 'comparison-modal';
-    modal.innerHTML = html;
-    modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
-    document.body.appendChild(modal);
-}
-
+// DISPLAY FUNCTIONS
 function showLoading(text) {
     const container = document.getElementById('results-container');
     if (container) {
@@ -774,6 +981,13 @@ function showLoading(text) {
 }
 
 function hideLoading() {}
+
+function showExportButtons() {
+    const exportButtons = document.getElementById('export-buttons');
+    if (exportButtons) {
+        exportButtons.style.display = 'grid';
+    }
+}
 
 function displaySingleResults() {
     const stats = currentData.stats;
@@ -983,53 +1197,151 @@ function createChart(years, values) {
     });
 }
 
-function handleAIQuery() {
-    const input = document.getElementById('ai-input');
-    if (!input) return;
+// EXPORT FUNCTIONS
+function exportToCSV() {
+    if (!currentData) {
+        showNotification('No data to export', 'error');
+        return;
+    }
     
-    const query = input.value.trim();
-    if (!query) return;
+    let csv = '';
     
-    const messages = document.getElementById('ai-messages');
-    if (!messages) return;
+    if (currentData.type === 'single') {
+        csv = 'Year,Temperature (°C)\n';
+        currentData.years.forEach((year, i) => {
+            csv += `${year},${currentData.values[i]}\n`;
+        });
+        csv += `\nStatistics\nAverage,${currentData.stats.mean}\nMinimum,${currentData.stats.min}\nMaximum,${currentData.stats.max}\nStd Dev,${currentData.stats.std}`;
+    } else if (currentData.type === 'range') {
+        csv = 'Date,Mean Temp (°C),Min Temp (°C),Max Temp (°C)\n';
+        currentData.results.forEach(r => {
+            csv += `${r.date},${r.mean},${r.min},${r.max}\n`;
+        });
+    } else if (currentData.type === 'polygon') {
+        csv = 'Latitude,Longitude,Mean Temp (°C),Min Temp (°C),Max Temp (°C)\n';
+        currentData.results.forEach(r => {
+            csv += `${r.lat},${r.lng},${r.mean},${r.min},${r.max}\n`;
+        });
+    } else if (currentData.type === 'flood') {
+        csv = 'Metric,Value\n';
+        csv += `Risk Level,${currentData.riskLevel}\n`;
+        csv += `Risk Percentage,${currentData.riskPercent}%\n`;
+        csv += `Avg Precipitation,${currentData.precipStats.mean}mm\n`;
+        csv += `Avg Humidity,${currentData.humidityStats.mean}%\n`;
+    }
     
-    const userMsg = document.createElement('div');
-    userMsg.className = 'ai-message ai-message-user';
-    userMsg.innerHTML = `
-        <div class="ai-avatar">👤</div>
-        <div class="ai-bubble">${query}</div>
-    `;
-    messages.appendChild(userMsg);
+    downloadFile(csv, `dropcheck_${currentData.type}_${Date.now()}.csv`, 'text/csv');
+    showNotification('CSV exported successfully!', 'success');
+}
+
+function exportToJSON() {
+    if (!currentData) {
+        showNotification('No data to export', 'error');
+        return;
+    }
     
-    input.value = '';
+    const json = JSON.stringify(currentData, null, 2);
+    downloadFile(json, `dropcheck_${currentData.type}_${Date.now()}.json`, 'application/json');
+    showNotification('JSON exported successfully!', 'success');
+}
+
+function downloadFile(content, filename, type) {
+    const blob = new Blob([content], { type });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+// HISTORY FUNCTIONS
+function saveToHistory(data) {
+    if (data.type !== 'single') return;
     
-    setTimeout(() => {
-        const aiMsg = document.createElement('div');
-        aiMsg.className = 'ai-message';
-        
-        let response = '';
-        
-        if (currentData) {
-            if (currentData.type === 'single') {
-                response = `Based on ${currentData.dataPoints} years of NASA data, the historical average temperature for this date is ${currentData.stats.mean}°C, ranging from ${currentData.stats.min}°C to ${currentData.stats.max}°C. The standard deviation of ${currentData.stats.std} indicates moderate variability in temperature for this location and date.`;
-            } else if (currentData.type === 'range') {
-                response = `I've analyzed the date range and identified optimal dates. The best date is ${currentData.best[0].date} with an average temperature of ${currentData.best[0].mean.toFixed(1)}°C. The worst date is ${currentData.worst[0].date} with ${currentData.worst[0].mean.toFixed(1)}°C.`;
-            } else if (currentData.type === 'polygon') {
-                response = `In the analyzed area, I found ${currentData.total} points. The optimal location has an average temperature of ${currentData.best[0].mean.toFixed(1)}°C at coordinates ${currentData.best[0].lat}, ${currentData.best[0].lng}.`;
-            } else if (currentData.type === 'flood') {
-                response = `The flood risk assessment shows a ${currentData.riskLevel} risk level (${currentData.riskPercent}%) based on average precipitation of ${currentData.precipStats.mean}mm and humidity of ${currentData.humidityStats.mean}%.`;
+    const entry = {
+        date: data.date,
+        location: data.location,
+        stats: data.stats,
+        timestamp: Date.now()
+    };
+    
+    comparisonHistory.unshift(entry);
+    if (comparisonHistory.length > 10) comparisonHistory.pop();
+    
+    try {
+        localStorage.setItem('scientificHistory', JSON.stringify(comparisonHistory));
+    } catch (e) {
+        console.warn('Failed to save history');
+    }
+    
+    const compareBtn = document.getElementById('compare-btn');
+    if (compareBtn && comparisonHistory.length > 0) {
+        compareBtn.style.display = 'block';
+    }
+}
+
+function loadComparisonHistory() {
+    try {
+        const stored = localStorage.getItem('scientificHistory');
+        if (stored) {
+            comparisonHistory = JSON.parse(stored);
+            const compareBtn = document.getElementById('compare-btn');
+            if (compareBtn && comparisonHistory.length > 0) {
+                compareBtn.style.display = 'block';
             }
-        } else {
-            response = 'Please run an analysis first so I can help you interpret the data. Select a mode, location, and date, then click "Analyze with NASA Data".';
         }
-        
-        aiMsg.innerHTML = `
-            <div class="ai-avatar">🤖</div>
-            <div class="ai-bubble"><p>${response}</p></div>
+    } catch (e) {
+        console.warn('Failed to load history');
+    }
+}
+
+function showComparisonModal() {
+    if (comparisonHistory.length < 2) {
+        showNotification('Need at least 2 analyses to compare', 'error');
+        return;
+    }
+    
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.8); z-index: 10000;
+        display: flex; align-items: center; justify-content: center;
+        padding: 20px;
+    `;
+    
+    let html = '<div style="background: white; padding: 40px; border-radius: 20px; max-width: 800px; max-height: 80vh; overflow-y: auto;">';
+    html += '<h2 style="color: #00C4FF; margin-bottom: 20px; font-family: Orbitron, sans-serif;">Date Comparison History</h2>';
+    html += '<div style="display: grid; gap: 15px;">';
+    
+    comparisonHistory.forEach((entry, i) => {
+        const date = new Date(entry.timestamp).toLocaleDateString();
+        html += `
+            <div style="background: rgba(0, 196, 255, 0.1); padding: 20px; border-radius: 12px; border: 2px solid rgba(0, 196, 255, 0.3);">
+                <div style="color: #1E1E2F; font-weight: 700; margin-bottom: 10px;">
+                    ${entry.date} - ${entry.location.lat}, ${entry.location.lon}
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; font-size: 0.9em;">
+                    <div><strong>Avg:</strong> ${entry.stats.mean}°C</div>
+                    <div><strong>Min:</strong> ${entry.stats.min}°C</div>
+                    <div><strong>Max:</strong> ${entry.stats.max}°C</div>
+                    <div><strong>Std:</strong> ${entry.stats.std}</div>
+                </div>
+                <div style="font-size: 0.8em; color: rgba(30, 30, 47, 0.6); margin-top: 8px;">Analyzed: ${date}</div>
+            </div>
         `;
-        messages.appendChild(aiMsg);
-        messages.scrollTop = messages.scrollHeight;
-    }, 800);
+    });
+    
+    html += '</div>';
+    html += '<button onclick="this.closest(\'.comparison-modal\').remove()" style="margin-top: 20px; background: #00C4FF; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 700;">Close</button>';
+    html += '</div>';
+    
+    modal.className = 'comparison-modal';
+    modal.innerHTML = html;
+    modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+    document.body.appendChild(modal);
 }
 
 console.log('✅ DropCheck Scientific v2.0 - Ready!');

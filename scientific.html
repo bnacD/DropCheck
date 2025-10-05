@@ -15,12 +15,17 @@
 <body>
     <div class="space-bg"></div>
     
+    <!-- Info Banner -->
+    <div class="info-banner">
+        💡 Click the information icons (ℹ️) next to buttons and parameters to understand their functions. All tips and messages are in English.
+    </div>
+    
     <a href="index.html" class="back-link">← Back to Home</a>
     
     <div class="container">
         <header class="header">
             <h1>🛰 Scientific Analysis</h1>
-            <p>NASA POWER API • 20+ Years Historical Data • AI-Powered Insights</p>
+            <p>NASA POWER API • 20+ Years Historical Data • Chatbot Assistance</p>
         </header>
         
         <div class="main-grid">
@@ -31,10 +36,22 @@
                 </div>
                 
                 <div class="mode-selector">
-                    <button class="mode-btn active" data-mode="single" title="Analyze a single point with historical data">📍 Point</button>
-                    <button class="mode-btn" data-mode="range" title="Compare multiple dates to find best/worst">📅 Range</button>
-                    <button class="mode-btn" data-mode="polygon" title="Analyze an area to find optimal locations">🗺 Area</button>
-                    <button class="mode-btn" data-mode="flood" title="Assess flood risk based on precipitation and humidity">💧 Flood</button>
+                    <button class="mode-btn active" data-mode="single" title="Single Point Analysis">
+                        🔍 Point
+                        <span class="info-icon" data-info="Get current weather for a single location and date using historical NASA data.">ℹ️</span>
+                    </button>
+                    <button class="mode-btn" data-mode="range" title="Date Range Comparison">
+                        📅 Range
+                        <span class="info-icon" data-info="Compare multiple dates to find the best or worst days for your activity.">ℹ️</span>
+                    </button>
+                    <button class="mode-btn" data-mode="polygon" title="Polygon Area Analysis">
+                        🗺 Area
+                        <span class="info-icon" data-info="Draw a polygon to analyze all points inside the area and find optimal zones.">ℹ️</span>
+                    </button>
+                    <button class="mode-btn" data-mode="flood" title="Flood Risk Assessment">
+                        💧 Flood
+                        <span class="info-icon" data-info="Assess flood risk based on precipitation and humidity historical data.">ℹ️</span>
+                    </button>
                 </div>
                 
                 <div id="map" style="height: 400px; width: 100%;"></div>
@@ -48,25 +65,46 @@
                 
                 <div id="date-container-single">
                     <div class="input-group">
-                        <label>📅 Date</label>
+                        <label>
+                            📅 Date
+                            <span class="info-icon" data-info="Select the date you want to analyze. We'll compare data from this date across multiple years.">ℹ️</span>
+                        </label>
                         <input type="date" id="date-input">
                     </div>
                 </div>
                 
                 <div id="date-container-range" style="display: none;">
                     <div class="input-group">
-                        <label>📅 Start Date</label>
+                        <label>
+                            📅 Start Date
+                            <span class="info-icon" data-info="Select the first date of the range you want to analyze.">ℹ️</span>
+                        </label>
                         <input type="date" id="start-date">
                     </div>
                     <div class="input-group">
-                        <label>📅 End Date</label>
+                        <label>
+                            📅 End Date
+                            <span class="info-icon" data-info="Select the last date of the range. Maximum 90 days from start date.">ℹ️</span>
+                        </label>
                         <input type="date" id="end-date">
                     </div>
                 </div>
                 
                 <button class="btn-analyze" id="analyze-btn">
                     <span>⚡ Analyze with NASA Data</span>
+                    <span class="info-icon" data-info="Start analysis using real NASA POWER satellite data from the last 20+ years.">ℹ️</span>
                 </button>
+                
+                <div class="export-buttons" id="export-buttons" style="display: none; margin-top: 15px; gap: 10px; display: none;">
+                    <button class="btn-analyze export-btn" id="export-csv">
+                        📄 Export CSV
+                        <span class="info-icon" data-info="Download all analysis results in CSV format for further use in spreadsheets.">ℹ️</span>
+                    </button>
+                    <button class="btn-analyze export-btn" id="export-json">
+                        📋 Export JSON
+                        <span class="info-icon" data-info="Download all analysis results in JSON format with complete metadata.">ℹ️</span>
+                    </button>
+                </div>
                 
                 <button class="btn-analyze export-btn" id="compare-btn" style="display: none; margin-top: 15px;">
                     📊 View Comparison History
@@ -98,37 +136,73 @@
         </div>
     </div>
     
-    <!-- AI Widget -->
-    <div class="ai-widget">
-        <button class="ai-toggle-btn" id="ai-toggle">🤖</button>
-        <div class="ai-chat-window" id="ai-chat" style="display: none;">
-            <div class="ai-chat-header">
-                <div class="ai-header-left">
-                    <span class="ai-icon">🤖</span>
+    <!-- Chatbot Widget -->
+    <div class="chatbot-widget">
+        <button class="chatbot-toggle-btn" id="chatbot-toggle">🤖</button>
+        <div class="chatbot-window" id="chatbot-window" style="display: none;">
+            <div class="chatbot-header">
+                <div class="chatbot-header-left">
+                    <span class="chatbot-icon">🤖</span>
                     <div>
-                        <h3>AI Assistant</h3>
-                        <div class="ai-status">Ready to help</div>
+                        <h3>Chatbot Assistant</h3>
+                        <div class="chatbot-status">Ready to help</div>
                     </div>
                 </div>
-                <button class="ai-close-btn" id="ai-close">×</button>
+                <button class="chatbot-close-btn" id="chatbot-close">×</button>
             </div>
-            <div class="ai-chat-body" id="ai-messages">
-                <div class="ai-message">
-                    <div class="ai-avatar">🤖</div>
-                    <div class="ai-bubble">
-                        <p>Hello! I can help you interpret weather data and provide insights. Ask me anything about your analysis results!</p>
+            <div class="chatbot-body" id="chatbot-messages">
+                <div class="chatbot-message">
+                    <div class="chatbot-avatar">🤖</div>
+                    <div class="chatbot-bubble">
+                        <p>Hello! I can help you interpret weather data. Select a question below based on your analysis type!</p>
                     </div>
                 </div>
             </div>
-            <div class="ai-chat-footer">
-                <div class="ai-input-container">
-                    <textarea id="ai-input" placeholder="Ask about the data..." rows="2"></textarea>
-                    <button class="ai-send-btn" id="ai-send">➤</button>
-                </div>
-                <div class="ai-footer-info">
-                    <span class="ai-model-info">AI Assistant v1.0</span>
+            <div class="chatbot-footer">
+                <div class="chatbot-questions" id="chatbot-questions"></div>
+                <div class="chatbot-footer-info">
+                    <span class="chatbot-model-info">Chatbot Assistant v1.0</span>
                 </div>
             </div>
+        </div>
+    </div>
+    
+    <!-- Polygon Tutorial Carousel -->
+    <div class="tutorial-overlay" id="tutorial-overlay" style="display: none;">
+        <div class="tutorial-carousel">
+            <div class="tutorial-close" id="tutorial-close">×</div>
+            <div class="tutorial-slide active" data-slide="1">
+                <div class="tutorial-image">🗺️</div>
+                <h3>Welcome to Polygon Analysis!</h3>
+                <p>Learn how to analyze entire areas to find the best zones for your activities.</p>
+            </div>
+            <div class="tutorial-slide" data-slide="2">
+                <div class="tutorial-image">✏️</div>
+                <h3>Step 1: Select Polygon Tool</h3>
+                <p>Click the polygon icon in the map toolbar (top right) to start drawing your area.</p>
+            </div>
+            <div class="tutorial-slide" data-slide="3">
+                <div class="tutorial-image">📍</div>
+                <h3>Step 2: Draw Your Area</h3>
+                <p>Click multiple points on the map to create your polygon. Click the first point again to close it.</p>
+            </div>
+            <div class="tutorial-slide" data-slide="4">
+                <div class="tutorial-image">⚡</div>
+                <h3>Step 3: Analyze</h3>
+                <p>Select a date and click "Analyze with NASA Data" to get results for all points inside your polygon.</p>
+            </div>
+            <div class="tutorial-slide" data-slide="5">
+                <div class="tutorial-image">🎯</div>
+                <h3>Step 4: View Results</h3>
+                <p>See color-coded markers on the map: Green = Best zones, Red = Worst zones. Check the results panel for details!</p>
+            </div>
+            <div class="tutorial-navigation">
+                <button class="tutorial-btn" id="tutorial-prev">← Previous</button>
+                <div class="tutorial-dots" id="tutorial-dots"></div>
+                <button class="tutorial-btn" id="tutorial-next">Next →</button>
+                <button class="tutorial-btn tutorial-finish" id="tutorial-finish" style="display: none;">Finish</button>
+            </div>
+            <button class="tutorial-skip" id="tutorial-skip">Skip Tutorial</button>
         </div>
     </div>
     
